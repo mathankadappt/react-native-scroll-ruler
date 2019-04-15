@@ -76,4 +76,24 @@ public class RNScrollRulerManager extends SimpleViewManager {
         ruler.setScaleCount(num);
     }
 
+    @ReactProp(name = "resultNumTextSize")
+    public void setResultNumTextSize(RNScrollRuler ruler, @Nullable int resultNumTextSize) {
+        ruler.setResultNumTextSize(resultNumTextSize);
+    }
+
+    @ReactProp(name = "unitTextSize")
+    public void setUnitTextSize(RNScrollRuler ruler, @Nullable int unitTextSize) {
+        ruler.setUnitTextSize(unitTextSize);
+    }
+
+    @ReactProp(name = "resultNumTextColor")
+    public void setResultNumColor(RNScrollRuler ruler, @Nullable String resultNumTextColor) {
+        ruler.setResultNumColor(resultNumTextColor);
+    }
+
+    @ReactProp(name = "unitTextColor")
+    public void setUnitColor(RNScrollRuler ruler, @Nullable String unitTextColor) {
+        ruler.setUnitColor(unitTextColor);
+    }
+
 }

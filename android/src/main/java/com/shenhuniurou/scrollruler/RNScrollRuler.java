@@ -9,6 +9,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Color;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -153,6 +154,7 @@ public class RNScrollRuler extends View {
     private Paint lagScalePaint;
     private Paint scaleNumPaint;
     private Paint resultNumPaint;
+    private Paint circlePaint;
     private Paint kgPaint;
     private Rect scaleNumRect;
     private Rect resultNumRect;
@@ -563,12 +565,25 @@ public class RNScrollRuler extends View {
             canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height(), //绘制当前刻度结果值
                     resultNumPaint);
         } else {
-            resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
+            resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, resultNumTextSize, getResources().getDisplayMetrics()));
+            resultNumPaint.setColor(resultNumColor);
             resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
-            canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height(), //绘制当前刻度结果值
+
+            //CHANGES
+            circlePaint = new Paint();
+            circlePaint.setColor(0xff4A90E2);
+            circlePaint.setStrokeWidth(4);
+            circlePaint.setStyle(Paint.Style.STROKE);
+            canvas.drawCircle(width / 2, -55, 80, circlePaint);
+            canvas.drawLine(width / 2, 25, width / 2, 110, circlePaint);
+
+            canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, -50, //绘制当前刻度结果值
                     resultNumPaint);
-            resultNumRight = width / 2 + resultNumRect.width() / 2 + 5;
-            canvas.drawText(unit, resultNumRight, kgRect.height() + 8, kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
+
+            kgPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, unitTextSize, getResources().getDisplayMetrics()));
+            kgPaint.setColor(unitColor);
+            resultNumRight = width / 2 - unitTextSize;
+            canvas.drawText(unit, resultNumRight, -10, kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
         }
     }
 
@@ -657,8 +672,8 @@ public class RNScrollRuler extends View {
         invalidate();
     }
 
-    public void setResultNumColor(int resultNumColor) {
-        this.resultNumColor = resultNumColor;
+    public void setResultNumColor(String resultNumColor) {
+        this.resultNumColor = Color.parseColor(resultNumColor);
         invalidate();
     }
 
@@ -707,8 +722,13 @@ public class RNScrollRuler extends View {
         invalidate();
     }
 
-    public void setUnitColor(int unitColor) {
-        this.unitColor = unitColor;
+    public void setUnitColor(String unitColor) {
+        this.unitColor = Color.parseColor(unitColor);
+        invalidate();
+    }
+
+    public void setUnitTextSize(int unitTextSize) {
+        this.unitTextSize = unitTextSize;
         invalidate();
     }
 
