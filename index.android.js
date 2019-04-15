@@ -9,6 +9,10 @@ type PropsType = {
     step?: number;
     num?: number;
     unit?: string;
+    resultNumTextSize:? number;
+    unitTextSize:? number;
+    resultNumTextColor:? string;
+    unitColor:? string;
 } & typeof
 (View);
 
@@ -20,6 +24,10 @@ export default class ReactScrollRuler extends Component {
         step: PropTypes.number.isRequired,
         num: PropTypes.number.isRequired,
         unit: PropTypes.string,
+        resultNumTextSize: PropTypes.number,
+        unitTextSize: PropTypes.number,
+        resultNumTextColor: PropTypes.string,
+        unitColor: PropTypes.string,
         onSelect: PropTypes.func,
         ...ViewPropTypes,
     };
@@ -46,6 +54,12 @@ export default class ReactScrollRuler extends Component {
             num,
             unit,
             onSelect,
+            resultNumTextSize,
+            unitTextSize,
+            resultNumTextColor,
+            unitColor,
+            textStyle,
+            unitLabelStyle,
             ...otherProps
         } = this.props;
 
@@ -60,6 +74,10 @@ export default class ReactScrollRuler extends Component {
                 step={step}
                 num={num}
                 unit={unit}
+                resultNumTextSize={resultNumTextSize}
+                unitTextSize={unitTextSize}
+                resultNumTextColor={resultNumTextColor}
+                unitColor={unitColor}
                 onSelect={this._onSelect}
                 {...otherProps}
             />
