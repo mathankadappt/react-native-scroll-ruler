@@ -1,5 +1,5 @@
 # react-native-scroll-ruler
-ReactNative版滑动刻度尺,兼容Android和iOS。
+React Native
 
 ## Gifs
 ![](https://github.com/shenhuniurou/react-native-scroll-ruler/blob/master/scroll-ruler-ios.gif)
