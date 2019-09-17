@@ -37,16 +37,19 @@ RCT_EXPORT_VIEW_PROPERTY(num, int);
 
 RCT_EXPORT_VIEW_PROPERTY(unit, NSString);
 
+RCT_EXPORT_VIEW_PROPERTY(isTime, BOOL);
+
+
 RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
 
 - (UIView *)view
 {
     
     CGFloat rullerHeight = [RCTScrollRuler rulerViewHeight];
-    _noneZeroRullerView = [[RCTScrollRuler alloc]initWithFrame:CGRectMake(10, 0, ScreenWidth-20, rullerHeight) theMinValue:0 theMaxValue:0  theStep:1.0 theNum:10 theUnit:@""];
+    _noneZeroRullerView = [[RCTScrollRuler alloc]initWithFrame:CGRectMake(10, 0, ScreenWidth-20, rullerHeight) theMinValue:0 theMaxValue:0  theStep:1.0 theNum:10 theUnit:@"" isTime:false];
     _noneZeroRullerView.bgColor = [UIColor whiteColor];
     _noneZeroRullerView.delegate        = self;
-    _noneZeroRullerView.scrollByHand    = YES;
+    _noneZeroRullerView.scrollByHand    = NO;
     
     return _noneZeroRullerView;
 }

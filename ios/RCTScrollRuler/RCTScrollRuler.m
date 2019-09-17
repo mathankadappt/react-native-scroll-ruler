@@ -14,12 +14,14 @@
 #define RulerLineColor [UIColor grayColor]
 
 #define RulerGap        12 //单位距离
-#define RulerLong       40
-#define RulerShort      30
+#define RulerLong       35
+#define IndicatorHeight  49
+#define RulerShort      20
 #define TrangleWidth    16
 #define CollectionHeight 70
 
 #import "RCTScrollRuler.h"
+#import <CoreGraphics/CoreGraphics.h>
 
 /**
  *  绘制三角形标示
@@ -74,39 +76,71 @@
 @property (nonatomic,assign)NSInteger betweenNumber;
 @property (nonatomic,assign)int minValue;
 @property (nonatomic,assign)int maxValue;
+@property (nonatomic,assign)BOOL isTime;
 @property (nonatomic,assign)float step;
 
 @end
 @implementation DYRulerView
+@synthesize isTime;
 
 -(void)drawRect:(CGRect)rect{
     CGFloat startX = 0;
     CGFloat lineCenterX = RulerGap;
-    CGFloat shortLineY  = rect.size.height - RulerLong;
-    CGFloat longLineY = rect.size.height - RulerShort;
-    CGFloat topY = 0;
+    CGFloat shortLineY  = rect.size.height - RulerShort;
+    CGFloat longLineY = rect.size.height - RulerLong;
+    CGFloat topY = rect.size.height;
     
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextSetRGBStrokeColor(context, (float)192/255.0, (float)192/255.0, (float)192/255.0, 1.0);//设置线的颜色，默认是黑色
     CGContextSetLineWidth(context, 1);//设置线的宽度，
     CGContextSetLineCap(context, kCGLineCapButt);
     
-    for (int i = 0; i <= _betweenNumber; i ++){
-        CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
-        if (i%_betweenNumber == 0){
-            NSString *num = [NSString stringWithFormat:@"%d", (int)(i * _step) + _minValue];
-            if ([num isEqualToString:@"0"]) {
-                num = @"不设";
+    //_isTime = true;
+    if(isTime == true){
+        for (int i = 0; i <= _betweenNumber; i ++){
+            CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
+            if (i%_betweenNumber == 0){
+                //NSString *num = [NSString stringWithFormat:@"%d", (int)(i * _step) + _minValue];
+                int numeric = (int)(i * _step) + _minValue;
+                
+                int minutes =  floor(numeric / 60);
+                int seconds = numeric - minutes * 60;
+                NSString *num = [NSString stringWithFormat:@"%d:%d", minutes, seconds];
+                NSLog(@"Num: %@, Step : %f, Min : %d, i: %d ",num, _step, _minValue, i );
+                if ([num isEqualToString:@"0"]) {
+                    num = @"";
+                }
+                
+                
+                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor lightGrayColor]};
+                CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
+                [num drawInRect:CGRectMake(startX+lineCenterX*i-width/2, longLineY-14, width, 16) withAttributes:attribute];
+                CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
+            }else{
+                CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
             }
-            NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor lightGrayColor]};
-            CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
-            [num drawInRect:CGRectMake(startX+lineCenterX*i-width/2, longLineY+10, width, 16) withAttributes:attribute];
-            CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
-        }else{
-            CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
+            CGContextStrokePath(context);//开始绘制
         }
-        CGContextStrokePath(context);//开始绘制
+    }else{
+        for (int i = 0; i <= _betweenNumber; i ++){
+            CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
+            if (i%_betweenNumber == 0){
+                NSString *num = [NSString stringWithFormat:@"%d", (int)(i * _step) + _minValue];
+                if ([num isEqualToString:@"0"]) {
+                    num = @"";
+                }
+                
+                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor lightGrayColor]};
+                CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
+                [num drawInRect:CGRectMake(startX+lineCenterX*i-width/2, longLineY-14, width, 16) withAttributes:attribute];
+                CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
+            }else{
+                CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
+            }
+            CGContextStrokePath(context);//开始绘制
+        }
     }
+
 }
 
 @end
@@ -117,6 +151,7 @@
 @interface DYHeaderRulerView : UIView
 
 @property(nonatomic,assign)int minValue;
+@property(nonatomic,assign)BOOL isTime;
 
 @end
 
@@ -134,14 +169,19 @@
     
     NSString *num;
     if (_minValue == 0) {
-        num = @"不设";
+        if(_isTime == false){
+                num = @"0";
+        }else{
+            num = @"0:0";
+        }
+        
     } else {
         num = [NSString stringWithFormat:@"%d", _minValue];
     }
     
     NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont,NSForegroundColorAttributeName:[UIColor lightGrayColor]};
     CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
-    [num drawInRect:CGRectMake(rect.size.width-width/2, longLineY+10, width, 16) withAttributes:attribute];
+    [num drawInRect:CGRectMake(rect.size.width-width/2, longLineY+40, width, 16) withAttributes:attribute];
     CGContextAddLineToPoint(context, rect.size.width, longLineY);
     CGContextStrokePath(context);//开始绘制
 }
@@ -185,15 +225,16 @@
 @property(nonatomic, strong)UICollectionView*collectionView;
 @property(nonatomic, strong)UIView          *grayLine;
 @property(nonatomic, strong)DYTriangleView  *triangle;
-@property(nonatomic, assign)int           realValue;
+@property(nonatomic, assign)float           realValue;
 @property(nonatomic, assign)int           stepNum;//分多少个区
 @property(nonatomic, assign)int           minValue;//游标的最小值
 @property(nonatomic, assign)int           maxValue;//游标的最大值
-@property(nonatomic, assign)float           step;//间隔值，每两条相隔多少值
+@property(nonatomic, assign)int           step;//间隔值，每两条相隔多少值
 @property(nonatomic, assign)NSInteger     betweenNum;
 @property(nonatomic, strong)NSString      *unit;//单位
 @property (nonatomic,assign)int defaultValue;
 @property (nonatomic,assign)int num;
+@property(nonatomic, assign)BOOL           isTime;
 @end
 @implementation RCTScrollRuler
 
@@ -210,7 +251,7 @@
     [self addSubview:self.unitLab];
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
-    [self addSubview:self.grayLine];
+    //[self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
     self.unitLab.text = _unit;
 }
@@ -228,7 +269,25 @@
     [self addSubview:self.unitLab];
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
-    [self addSubview:self.grayLine];
+   // [self addSubview:self.grayLine];
+    [self setDefaultValue:_defaultValue];
+    self.unitLab.text = _unit;
+}
+
+- (void)setIsTime:(BOOL)isTime {
+    NSLog(@"设置最大值");
+    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    _isTime = isTime;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
+    _bgColor    = [UIColor whiteColor];
+    _triangleColor          = [UIColor redColor];
+    self.backgroundColor    = [UIColor whiteColor];
+    
+    [self addSubview:self.valueLab];
+    [self addSubview:self.unitLab];
+    [self addSubview:self.collectionView];
+    [self addSubview:self.triangle];
+    // [self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
     self.unitLab.text = _unit;
 }
@@ -246,22 +305,23 @@
     [self addSubview:self.unitLab];
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
-    [self addSubview:self.grayLine];
+   // [self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
     self.unitLab.text = _unit;
 }
 
-- (void)setDefaultValue:(int)defaultValue {
+- (void)setDefaultValue:(float)defaultValue {
     NSLog(@"设置默认值");
     _defaultValue      = defaultValue;
     if (_maxValue != 0) {
         [self setRealValue:defaultValue];
         [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
     }
-    NSLog(@"setDefaultValue被调用了，defaultValue=%d", defaultValue);
+    NSLog(@"setDefaultValue被调用了，defaultValue=%.2f", defaultValue);
 }
 
-- (void)setNum:(int)num {
+
+- (void)setNum:(float)num {
     NSLog(@"设置间隔");
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _num = num;
@@ -271,10 +331,10 @@
     self.backgroundColor    = [UIColor whiteColor];
     
     [self addSubview:self.valueLab];
-    [self addSubview:self.unitLab];
+   // [self addSubview:self.unitLab];
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
-    [self addSubview:self.grayLine];
+    //[self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
     self.unitLab.text = _unit;
 }
@@ -289,15 +349,15 @@
     self.backgroundColor    = [UIColor whiteColor];
     
     [self addSubview:self.valueLab];
-    [self addSubview:self.unitLab];
+   // [self addSubview:self.unitLab];
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
-    [self addSubview:self.grayLine];
+    //[self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
     self.unitLab.text = _unit;
 }
 
--(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit{
+-(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime{
     
     self = [super initWithFrame:frame];
     if (self) {
@@ -307,15 +367,16 @@
         _unit       = unit;
         _stepNum    = (_maxValue-_minValue)/_step/betweenNum;
         _betweenNum = betweenNum;
+        _isTime = isTime;
         _bgColor    = [UIColor whiteColor];
         _triangleColor          = [UIColor redColor];
         self.backgroundColor    = [UIColor whiteColor];
         
         [self addSubview:self.valueLab];
-        [self addSubview:self.unitLab];
+        //[self addSubview:self.unitLab];
         [self addSubview:self.collectionView];
         [self addSubview:self.triangle];
-        [self addSubview:self.grayLine];
+        //[self addSubview:self.grayLine];
         self.unitLab.text = _unit;
     }
     return self;
@@ -324,7 +385,7 @@
 -(UIView *)grayLine {
     if (!_grayLine) {
         _grayLine = [[UIView alloc]initWithFrame:CGRectMake(0, CGRectGetMaxY(_valueLab.frame), self.bounds.size.width, 1)];
-        _grayLine.backgroundColor = [UIColor lightGrayColor];
+        _grayLine.backgroundColor = [UIColor cyanColor];
     }
     return _grayLine;
 }
@@ -334,7 +395,7 @@
         //        _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-0.5-TrangleWidth/2, CGRectGetMaxY(_valueLab.frame), TrangleWidth, TrangleWidth)];
         //        _triangle.backgroundColor   = [UIColor clearColor];
         //        _triangle.triangleColor     = _triangleColor;
-        _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-0.5, CGRectGetMaxY(_valueLab.frame), 1, RulerLong)];
+        _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-0.5, CGRectGetMaxY(_valueLab.frame), 1, IndicatorHeight)];
         _triangle.backgroundColor   = [UIColor clearColor];
         _triangle.triangleColor     = _triangleColor;
     }
@@ -362,17 +423,17 @@
 }
 -(UILabel *)valueLab{
     if (!_valueLab) {
-        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-70, 10, 80, 40)];
-        _valueLab.textColor = [UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];;
+        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-40, 10, 80, 40)];
+        _valueLab.textColor = [UIColor orangeColor];//[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];;
         [_valueLab setFont:[UIFont fontWithName:@"Helvetica-Bold" size:20]];
-        _valueLab.textAlignment = NSTextAlignmentRight;
+         _valueLab.textAlignment = NSTextAlignmentCenter;
     }
     return _valueLab;
 }
 
 -(UILabel *)unitLab{
     if (!_unitLab) {
-        _unitLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2+10, 18, 40, 30)];
+        _unitLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2+10, 4, 40, 30)];
         _unitLab.textColor = [UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
         [_unitLab setFont:[UIFont fontWithName:@"Helvetica-Bold" size:13]];
         _unitLab.textAlignment = NSTextAlignmentLeft;
@@ -389,7 +450,7 @@
     _triangle.triangleColor = _triangleColor;
 }
 
--(void)setRealValue:(int)realValue{
+-(void)setRealValue:(float)realValue{
     [self setRealValue:realValue animated:NO];
 }
 -(void)setRealValue:(float)realValue animated:(BOOL)animated{
@@ -397,16 +458,21 @@
     int n = _realValue*_step+_minValue;
     if (n == 0) {
         _unitLab.hidden = YES;
-        _valueLab.text = @"不设";
+        if(_isTime == true){
+            _valueLab.text = @"0:00";
+        }else{
+            _valueLab.text = @"0";
+        }
+        
     } else {
         _unitLab.hidden = NO;
-        _valueLab.text = [NSString stringWithFormat:@"%d", n];
+        //_valueLab.text = [NSString stringWithFormat:@"%d", n];
     }
     [_collectionView setContentOffset:CGPointMake((int)realValue*RulerGap, 0) animated:animated];
 }
 
 +(CGFloat)rulerViewHeight{
-    return 40+20+CollectionHeight;
+    return CollectionHeight;
 }
 
 #pragma mark UICollectionViewDataSource & Delegate
@@ -419,34 +485,39 @@
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"headCell" forIndexPath:indexPath];
         DYHeaderRulerView *headerView = [cell.contentView viewWithTag:1000];
         if (!headerView){
-            headerView = [[DYHeaderRulerView alloc]initWithFrame:CGRectMake(0, 0, self.frame.size.width/2, CollectionHeight)];
+            headerView = [[DYHeaderRulerView alloc]initWithFrame:CGRectMake(0, 20, self.frame.size.width/2, CollectionHeight)];
             headerView.backgroundColor  =  [UIColor clearColor];
             headerView.tag              =  1000;
             headerView.minValue         = _minValue;
+            //headerView.backgroundColor = UIColor.redColor;
             [cell.contentView addSubview:headerView];
         }
+        CGAffineTransform move = CGAffineTransformMakeRotation(110);//CGAffineTransformMakeTranslation(1, 1);
+        //cell.transform = CGAffineTransformRotate(move, 0.0);
         
         return cell;
     }else if( indexPath.item == _stepNum +1){
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"footerCell" forIndexPath:indexPath];
         DYFooterRulerView *footerView = [cell.contentView viewWithTag:1001];
         if (!footerView){
-            footerView = [[DYFooterRulerView alloc]initWithFrame:CGRectMake(0, 0, self.frame.size.width/2, CollectionHeight)];
+            footerView = [[DYFooterRulerView alloc]initWithFrame:CGRectMake(0, 20, self.frame.size.width/2, CollectionHeight)];
             footerView.backgroundColor  = [UIColor clearColor];
             footerView.tag              = 1001;
             footerView.maxValue         = _maxValue;
             [cell.contentView addSubview:footerView];
         }
-        
+        CGAffineTransform move = CGAffineTransformMakeRotation(110);//CGAffineTransformMakeTranslation(1, 1);
+        //cell.transform = CGAffineTransformRotate(move, 0.0);
         return cell;
     }else{
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"custemCell" forIndexPath:indexPath];
         DYRulerView *rulerView = [cell.contentView viewWithTag:1002];
         if (!rulerView){
-            rulerView  = [[DYRulerView alloc]initWithFrame:CGRectMake(0, 0, RulerGap*_betweenNum, CollectionHeight)];
+            rulerView  = [[DYRulerView alloc]initWithFrame:CGRectMake(0, -20, RulerGap*_betweenNum, CollectionHeight)];
             rulerView.tag               = 1002;
             rulerView.step              = _step;
             rulerView.betweenNumber     = _betweenNum;
+             rulerView.backgroundColor  = [UIColor redColor];
             [cell.contentView addSubview:rulerView];
         }
         //        if(indexPath.item>=8 && indexPath.item<=12){
@@ -459,8 +530,11 @@
         rulerView.backgroundColor   =  [UIColor whiteColor];
         rulerView.minValue = (int)(_step*(indexPath.item-1)*_betweenNum+_minValue);
         rulerView.maxValue = (int)(_step*indexPath.item*_betweenNum);
+        rulerView.isTime = _isTime;
+        // rulerView.backgroundColor  = [UIColor yellowColor];
         [rulerView setNeedsDisplay];
-        
+        CGAffineTransform move = CGAffineTransformMakeRotation(110);//CGAffineTransformMakeTranslation(1, 1);
+        //cell.transform = CGAffineTransformRotate(move, 0.0);
         return cell;
     }
 }
@@ -486,23 +560,48 @@
 #pragma mark -UIScrollViewDelegate
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
-    float totalValue = value*_step +_minValue;
+    int totalValue = value*_step +_minValue;
     
     if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:)]) {
         [self.delegate dyScrollRulerView:self valueChange:totalValue];
     }
-    
+    _scrollByHand = YES;
     if (_scrollByHand) {
-        if (totalValue >= _maxValue) {
-            _valueLab.text = [NSString stringWithFormat:@"%d",_maxValue];
-        }else if(totalValue <= _minValue){
-            if(_minValue == 0) {
-                _valueLab.text = @"不设";
-            } else {
-                _valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
+        if(_isTime == true){
+            if (totalValue >= _maxValue) {
+                int minutes =  floor(_maxValue / 60);
+                int seconds = _maxValue - minutes * 60;
+                _valueLab.text = [NSString stringWithFormat:@"%d:%d", minutes, seconds];
+            }else if(totalValue <= _minValue){
+                if(_minValue == 0) {
+                    _valueLab.text = @"0:00";
+                } else {
+                    //_valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
+                    int minutes =  floor(_minValue / 60);
+                    int seconds = _minValue - minutes * 60;
+                    NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
+                    _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
+                }
+            }else{
+                
+                int minutes =  floor(value / 60);
+                int seconds = value - minutes * 60;
+                NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
+                _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
+                
             }
         }else{
-            _valueLab.text = [NSString stringWithFormat:@"%d",(int)(value*_step) +_minValue];
+            if (totalValue >= _maxValue) {
+                _valueLab.text = [NSString stringWithFormat:@"%d",_maxValue];
+            }else if(totalValue <= _minValue){
+                if(_minValue == 0) {
+                    _valueLab.text = @"0";
+                } else {
+                    _valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
+                }
+            }else{
+                _valueLab.text = [NSString stringWithFormat:@"%d",(value*_step) +_minValue];
+            }
         }
     }
 }
@@ -519,4 +618,3 @@
 }
 
 @end
-
