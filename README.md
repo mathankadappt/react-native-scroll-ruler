@@ -42,7 +42,10 @@ import RNScrollRuler from 'react-native-scroll-ruler';
    	defaultValue={this.state.defaultWeight}
    	onSelect={(value) => {
     	this.setState({weight: value});
-   	}}
+	}}
+	isTime={false}
+    markerTextColor={"#ffffff"}
+    markerColor={"#ff8d2a"}
 ></RNScrollRuler>
 
 
@@ -58,7 +61,10 @@ import RNScrollRuler from 'react-native-scroll-ruler';
    	defaultValue={this.state.defaultHeight}
    	onSelect={(value) => {
     	this.setState({height: value});
-   	}}
+	}}
+	isTime={false}
+    markerTextColor={"#ffffff"}
+    markerColor={"#ff8d2a"}
 ></RNScrollRuler>
 ```
 
