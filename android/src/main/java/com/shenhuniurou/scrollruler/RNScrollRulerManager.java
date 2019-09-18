@@ -83,4 +83,14 @@ public class RNScrollRulerManager extends SimpleViewManager {
         ruler.checkIsTime(isTime);
     }
 
+    @ReactProp(name = "markerTextColor")
+    public void setSelectedTextColor(RNScrollRuler ruler, @Nullable String markerTextColor) {
+        ruler.setSelectedTextColor(markerTextColor);
+    }
+
+    @ReactProp(name = "markerColor")
+    public void setMarkerColor(RNScrollRuler ruler, @Nullable String markerColor) {
+        ruler.setMarkerColor(markerColor);
+    }
+
 }

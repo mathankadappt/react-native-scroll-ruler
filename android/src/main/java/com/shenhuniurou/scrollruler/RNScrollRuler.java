@@ -6,6 +6,8 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -23,6 +25,7 @@ import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 
 import android.media.MediaPlayer;
+import  android.graphics.Path;
 
 /**
  * @author shenhuniurou
@@ -179,9 +182,11 @@ public class RNScrollRuler extends View  {
     private int rightScroll;
     private int xVelocity;
     private Rect correctAnswerRect;
-    private Paint correctAnswerPaint;
-    private String answerText = String.valueOf(firstScale);
     private static Context sContext;
+    private Paint resultRectPaint;
+
+    private String  markerTextColor = "#ffffff";
+    private String markerColor  = "#ff8d2a";
 
     MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.ticker);
 
@@ -288,7 +293,6 @@ public class RNScrollRuler extends View  {
         lagScalePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         scaleNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         resultNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        correctAnswerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
         kgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -301,15 +305,11 @@ public class RNScrollRuler extends View  {
         resultNumPaint.setColor(resultNumColor);
         resultNumPaint.setFakeBoldText(true);
 
-        correctAnswerPaint.setColor(resultNumColor);
-        correctAnswerPaint.setFakeBoldText(true);
-
-
         kgPaint.setColor(unitColor);
         kgPaint.setFakeBoldText(true);
 
         resultNumPaint.setStyle(Paint.Style.FILL);
-        correctAnswerPaint.setStyle(Paint.Style.FILL);
+
         kgPaint.setStyle(Paint.Style.FILL);
         bgPaint.setStyle(Paint.Style.FILL);
         horzitalLinePaint.setStyle(Paint.Style.FILL);
@@ -327,7 +327,7 @@ public class RNScrollRuler extends View  {
         horzitalLinePaint.setStrokeWidth(largeScaleStroke);
 
         resultNumPaint.setTextSize(resultNumTextSize);
-        correctAnswerPaint.setTextSize(resultNumTextSize);
+
         kgPaint.setTextSize(unitTextSize);
         scaleNumPaint.setTextSize(scaleNumTextSize);
 
@@ -340,7 +340,7 @@ public class RNScrollRuler extends View  {
 
         resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
 
-        correctAnswerPaint.getTextBounds(answerText, 0, answerText.length(), correctAnswerRect);
+
         kgPaint.getTextBounds(resultText, 0, 1, kgRect);
 
         smallScaleHeight = rulerHeight / 4;
@@ -412,8 +412,6 @@ public class RNScrollRuler extends View  {
                 //手指抬起时候制造惯性滑动
                 mp.pause();
                 lastMoveX = moveX;
-
-                // Log.i("CREATE FILE", "Error occurred while creating the File"+lastMoveX);
                 xVelocity = (int) velocityTracker.getXVelocity();
                 autoVelocityScroll(xVelocity);
                 velocityTracker.clear();
@@ -634,53 +632,111 @@ public class RNScrollRuler extends View  {
         //绘制屏幕中间用来选中刻度的最大刻度
 
         // reposition the bottom line and color
-        lagScalePaint.setColor(getResources().getColor(R.color.result_text_color));
-        canvas.drawLine(width / 2, resultNumRect.height()- 100, width / 2, midScaleHeight, lagScalePaint);
+        //lagScalePaint.setColor(getResources().getColor(R.color.result_text_color));
+        lagScalePaint.setColor(Color.parseColor(this.markerColor));
+        canvas.drawLine(width / 2, resultNumRect.height()- 180, width / 2, midScaleHeight , lagScalePaint);
 
     }
 
-    //绘制上面的结果 结果值+单位
+//    //绘制上面的结果 结果值+单位
+//    private void drawResultText(Canvas canvas, String resultText) {
+//        if (!showScaleResult) {   //判断用户是否设置需要显示当前刻度值，如果否则取消绘制
+//            return;
+//        }
+//        canvas.translate(0, -resultNumRect.height() - rulerToResultgap / 2);  //移动画布到正确的位置来绘制结果值
+//        if (resultText.equals("0")) {
+//            resultText = "0";
+//            resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
+//            resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
+//            canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height()- 100,  resultNumPaint); //绘制当前刻度结果值
+//            resultNumPaint.setColor(getResources().getColor(R.color.result_text_color));
+//        } else {
+//            resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
+//            resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
+//            resultNumPaint.setColor(getResources().getColor(R.color.result_text_color));
+//            if(this.isTime){
+//                String newFormatedValue =  this.transformSecondsToMinutes( Integer.valueOf(resultText) );
+//                canvas.drawText(newFormatedValue, width / 2 - resultNumRect.width() / 2, resultNumRect.height() - 100, //绘制当前刻度结果值
+//                        resultNumPaint);
+//            }else{
+//                canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height()- 100,resultNumPaint); //绘制当前刻度结果值
+//            }
+//            resultNumRight = width / 2 + resultNumRect.width() / 2 + 5;
+//
+//            canvas.drawText(unit, resultNumRight, kgRect.height() + 8, kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
+//        }
+//    }
+
+    public void drawTriangle(Canvas canvas, Paint paint, int x, int y, int width) {
+        int halfWidth = width / 2;
+        Matrix matrix = new Matrix();
+
+        Path path = new Path();
+        path.moveTo(x, y - halfWidth); // Top
+        path.lineTo(x - halfWidth, y + halfWidth); // Bottom left
+        path.lineTo(x + halfWidth, y + halfWidth); // Bottom right
+        path.lineTo(x, y - halfWidth); // Back to Top
+
+        Path oval = new Path();
+        matrix.postRotate(60, x+halfWidth, y);
+        path.transform(matrix, path);
+
+
+        canvas.drawPath(path, paint);
+    }
+
     private void drawResultText(Canvas canvas, String resultText) {
         if (!showScaleResult) {   //判断用户是否设置需要显示当前刻度值，如果否则取消绘制
             return;
         }
         canvas.translate(0, -resultNumRect.height() - rulerToResultgap / 2);  //移动画布到正确的位置来绘制结果值
+
+        //CHANGES
+        resultRectPaint = new Paint();
+        resultRectPaint.setStyle(Paint.Style.FILL);
+       // resultRectPaint.setColor(getResources().getColor(R.color.result_text_color));
+        resultRectPaint.setColor(Color.parseColor(this.markerColor));
+
+        resultRectPaint.setStrokeWidth(4);
+        Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
+        canvas.drawRect(rectangle, resultRectPaint);
+
+        Paint paint = new Paint();
+        //paint.setColor(getResources().getColor(R.color.result_text_color));
+        paint.setColor(Color.parseColor(this.markerColor));
+
+        drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
         if (resultText.equals("0")) {
             resultText = "0";
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
             resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
-            canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height()- 100,  resultNumPaint); //绘制当前刻度结果值
-            resultNumPaint.setColor(getResources().getColor(R.color.result_text_color));
+            //resultNumPaint.setColor(getResources().getColor(R.color.white));
+            resultNumPaint.setColor(Color.parseColor(this.markerTextColor));
+           // canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height(), resultNumPaint);
+            canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 145, resultNumPaint);
+
         } else {
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
             resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
-            resultNumPaint.setColor(getResources().getColor(R.color.result_text_color));
+           // resultNumPaint.setColor(getResources().getColor(R.color.white));
+            resultNumPaint.setColor(Color.parseColor(this.markerTextColor));
+
+            // canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 120, resultNumPaint);
             if(this.isTime){
                 String newFormatedValue =  this.transformSecondsToMinutes( Integer.valueOf(resultText) );
-                canvas.drawText(newFormatedValue, width / 2 - resultNumRect.width() / 2, resultNumRect.height() - 100, //绘制当前刻度结果值
-                        resultNumPaint);
+                canvas.drawText(newFormatedValue, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 145, resultNumPaint);
             }else{
-                canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height()- 100,resultNumPaint); //绘制当前刻度结果值
+                canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 145, resultNumPaint);
             }
-            resultNumRight = width / 2 + resultNumRect.width() / 2 + 5;
 
-            canvas.drawText(unit, resultNumRight, kgRect.height() + 8, kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
+            kgPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, unitTextSize, getResources().getDisplayMetrics()));
+            kgPaint.setColor(unitColor);
+            resultNumRight = width / 2 - unitTextSize;
+            canvas.drawText(unit, resultNumRight, -10, kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
         }
     }
 
-    private void drawCorrectAnswer(Canvas canvas, String answerText) {
-        correctAnswerPaint.getTextBounds(answerText, 0, answerText.length(), correctAnswerRect);
-        correctAnswerPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
-        correctAnswerPaint.setColor(getResources().getColor(R.color.black));
-        // moveX = getWhichScalMovex( Integer.valueOf(answerText));
-        if(this.isTime){
-            String newFormatedAnswerText=  this.transformSecondsToMinutes( Integer.valueOf(answerText) );
-            canvas.drawText(newFormatedAnswerText,width / 2 - resultNumRect.width() / 2 , resultNumRect.height() - 100, correctAnswerPaint);
-        }else{
-            canvas.drawText(answerText, width / 2 - resultNumRect.width() / 2, resultNumRect.height() - 100  ,correctAnswerPaint);
-            //canvas.drawText(answerText, 250, resultNumRect.height()- 100,correctAnswerPaint); //绘制当前刻度结果值
-        }
-    }
+
 
     private void drawBg(Canvas canvas) {
         bgRect.set(0, 0, width, height);
@@ -828,4 +884,13 @@ public class RNScrollRuler extends View  {
         invalidate();
     }
 
+    public void setSelectedTextColor(String markerTextColor) {
+        this.markerTextColor = markerTextColor;
+        invalidate();
+    }
+
+    public void setMarkerColor(String markerColor) {
+        this.markerColor = markerColor;
+        invalidate();
+    }
 }

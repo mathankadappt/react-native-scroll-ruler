@@ -1,5 +1,5 @@
-import React, { Component } from "react";
 import PropTypes from "prop-types";
+import React, { Component } from "react";
 import { requireNativeComponent, View, ViewPropTypes } from "react-native";
 
 type PropsType = {
@@ -46,6 +46,8 @@ export default class ReactScrollRuler extends Component {
       unit,
       onSelect,
       isTime,
+      markerTextColor,
+      markerColor,
       ...otherProps
     } = this.props;
 
@@ -62,6 +64,8 @@ export default class ReactScrollRuler extends Component {
         unit={unit}
         onSelect={this._onSelect}
         isTime={isTime}
+        markerTextColor={markerTextColor}
+        markerColor={markerColor}
         {...otherProps}
       />
     );
