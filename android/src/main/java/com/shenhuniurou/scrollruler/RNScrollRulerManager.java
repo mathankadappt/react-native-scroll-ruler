@@ -40,9 +40,9 @@ public class RNScrollRulerManager extends SimpleViewManager {
 
             @Override
             public void onScrollResult(String result) {
-                WritableMap event = Arguments.createMap();
-                event.putString("value", result);
-                reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(ruler.getId(), "topSelect", event);
+                // WritableMap event = Arguments.createMap();
+                // event.putString("value", result);
+                // reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(ruler.getId(), "topSelect", event);
             }
         });
         return ruler;
