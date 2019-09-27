@@ -34,11 +34,12 @@
 //背景颜色
 @property(nonatomic,strong)UIColor *bgColor;
 
--(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime;
+-(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)hexColor;
 
 -(void)setRealValue:(float)realValue animated:(BOOL)animated;
 
 +(CGFloat)rulerViewHeight;
++ (UIColor *)colorFromHexString:(NSString *)hexString;
 
 @end
 
