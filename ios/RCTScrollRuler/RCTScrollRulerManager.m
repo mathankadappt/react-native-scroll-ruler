@@ -50,7 +50,7 @@ RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
 {
     
     CGFloat rullerHeight = [RCTScrollRuler rulerViewHeight];
-    _noneZeroRullerView = [[RCTScrollRuler alloc]initWithFrame:CGRectMake(10, 0, ScreenWidth-20, rullerHeight) theMinValue:0 theMaxValue:0  theStep:1.0 theNum:10 theUnit:@"" isTime:false markerColor:@"#ffffff"];
+    _noneZeroRullerView = [[RCTScrollRuler alloc]initWithFrame:CGRectMake(10, 0, ScreenWidth-20, rullerHeight) theMinValue:0 theMaxValue:0  theStep:1.0 theNum:10 theUnit:@"" isTime:false markerColor:@"#ff8d2a" markerTextColor:@"#ffffff"];
     _noneZeroRullerView.bgColor = [UIColor whiteColor];
     _noneZeroRullerView.delegate        = self;
     _noneZeroRullerView.scrollByHand    = NO;

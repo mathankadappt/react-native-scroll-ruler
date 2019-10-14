@@ -80,6 +80,7 @@
 @property (nonatomic,assign)int maxValue;
 @property (nonatomic,assign)BOOL isTime;
 @property (nonatomic,assign)NSString *markerColor;
+@property (nonatomic,assign)NSString *markerTextColor;
 @property (nonatomic,assign)float step;
 
 @end
@@ -323,7 +324,7 @@
     [self setDefaultValue:_defaultValue];
     self.unitLab.text = _unit;
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
+    //self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
     _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
     [self addTriangleTipToLayer:_valueLab.layer];
     [self bringSubviewToFront:_valueLab];
@@ -349,6 +350,7 @@
     [self setDefaultValue:_defaultValue];
     self.unitLab.text = _unit;
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
+    self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
     _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
     [self addSubview:self.valueLab];
 }
@@ -421,7 +423,7 @@
     [self addSubview:self.valueLab];
 }
 
--(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor{
+-(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor {
     
     self = [super initWithFrame:frame];
     if (self) {
@@ -433,6 +435,7 @@
         _betweenNum = betweenNum;
         _isTime = isTime;
         _markerColor = markerColor;
+        markerTextColor = markerTextColor;
         
         _bgColor    = [UIColor whiteColor];
         _triangleColor          = [UIColor greenColor];//[RCTScrollRuler colorFromHexString:_markerColor];
@@ -507,7 +510,7 @@
         UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc]init];
         [flowLayout setScrollDirection:UICollectionViewScrollDirectionHorizontal];
         [flowLayout setSectionInset:UIEdgeInsetsMake(0, 0, 0, 0)];
-        _collectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(0, CGRectGetMaxY(_valueLab.frame) + 30, self.bounds.size.width, CollectionHeight) collectionViewLayout:flowLayout];
+        _collectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(-10, CGRectGetMaxY(_valueLab.frame) + 30, self.bounds.size.width + 20, CollectionHeight) collectionViewLayout:flowLayout];
         _collectionView.backgroundColor = _bgColor;
         _collectionView.bounces         = YES;
         _collectionView.showsHorizontalScrollIndicator  = NO;
@@ -629,7 +632,7 @@
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"footerCell" forIndexPath:indexPath];
         DYFooterRulerView *footerView = [cell.contentView viewWithTag:1001];
         if (!footerView){
-            footerView = [[DYFooterRulerView alloc]initWithFrame:CGRectMake(0, 20, self.frame.size.width/2, CollectionHeight)];
+            footerView = [[DYFooterRulerView alloc]initWithFrame:CGRectMake(50, 20, self.frame.size.width/2, CollectionHeight)];
             footerView.backgroundColor  = [UIColor clearColor];
             footerView.tag              = 1001;
             footerView.maxValue         = _maxValue;
