@@ -24,6 +24,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		180CF5D8233DC51200873F4F /* tickering.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = tickering.mp3; sourceTree = "<group>"; };
 		65373D5720AA8B88008AA28A /* libRCTScrollRuler.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTScrollRuler.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		65373D6520AA8BB4008AA28A /* RCTScrollRuler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCTScrollRuler.m; sourceTree = "<group>"; };
 		65373D6620AA8BB4008AA28A /* RCTScrollRulerManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCTScrollRulerManager.m; sourceTree = "<group>"; };
@@ -65,6 +66,7 @@
 				65373D6520AA8BB4008AA28A /* RCTScrollRuler.m */,
 				65373D7220AA8BB5008AA28A /* RCTScrollRulerManager.h */,
 				65373D6620AA8BB4008AA28A /* RCTScrollRulerManager.m */,
+				180CF5D8233DC51200873F4F /* tickering.mp3 */,
 			);
 			path = RCTScrollRuler;
 			sourceTree = "<group>";
