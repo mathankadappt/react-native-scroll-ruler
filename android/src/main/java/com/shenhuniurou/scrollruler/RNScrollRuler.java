@@ -11,6 +11,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.net.Uri;
 import androidx.annotation.Nullable;
 import android.util.AttributeSet;
@@ -298,10 +299,10 @@ public class RNScrollRuler extends View  {
 
         bgPaint.setColor(bgColor);
         horzitalLinePaint.setColor(smallScaleColor);
-        smallScalePaint.setColor(smallScaleColor);
-        midScalePaint.setColor(midScaleColor);
+        smallScalePaint.setColor(getResources().getColor(R.color.midscale));
+        midScalePaint.setColor(getResources().getColor(R.color.midscale));
         lagScalePaint.setColor(largeScaleColor);
-        scaleNumPaint.setColor(getResources().getColor(R.color.black));
+        scaleNumPaint.setColor(getResources().getColor(R.color.num_color));
         resultNumPaint.setColor(resultNumColor);
         resultNumPaint.setFakeBoldText(true);
 
@@ -475,7 +476,8 @@ public class RNScrollRuler extends View  {
 
         // 先画横线
 
-        canvas.drawLine(0, midScaleHeight, width, midScaleHeight, horzitalLinePaint);
+        // REMOVED BOTTOM LINE
+        //canvas.drawLine(0, midScaleHeight, width, midScaleHeight, horzitalLinePaint);
 
         int num1;//确定刻度位置
         float num2;
@@ -575,12 +577,12 @@ public class RNScrollRuler extends View  {
                     //当滑动出范围的话，不绘制，去除左右边界
                 } else {
                     //绘制刻度，绘制刻度数字
-                    canvas.drawLine(0, 0, 0, midScaleHeight, midScalePaint);
+                    canvas.drawLine(0, 25, 0, midScaleHeight+48, midScalePaint);
                     if (num1 == 0 && minScale == 0) {
                         scaleNumPaint.getTextBounds("0", 0, "0".length(), scaleNumRect);
-                         // checking time paramter and drawing the scale value
+                        // checking time paramter and drawing the scale value
                         //canvas.drawText("0", -scaleNumRect.width() / 2, lagScaleHeight + (rulerHeight - lagScaleHeight) / 2 + scaleNumRect.height(), scaleNumPaint);
-                        canvas.drawText("0",  -scaleNumRect.width() / 2 , -resultNumRect.height(), scaleNumPaint);
+                        canvas.drawText("0",  -scaleNumRect.width() / 2 , -resultNumRect.height() + 40, scaleNumPaint);
                     } else {
                         int rulerValue = (num1 / scaleCount + minScale) * scaleLimit;
                         scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
@@ -591,12 +593,12 @@ public class RNScrollRuler extends View  {
                             //canvas.drawText( newFormatedValue, -scaleNumRect.width() / 2, lagScaleHeight + (rulerHeight - lagScaleHeight) / 2 + scaleNumRect.height(), scaleNumPaint);
 
                             // reposition the scale value
-                            canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height(), scaleNumPaint);
+                            canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                         }else{
                             // canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", -scaleNumRect.width() / 2, lagScaleHeight + (rulerHeight - lagScaleHeight) / 2 + scaleNumRect.height(), scaleNumPaint);
 
                             // reposition the scale vlaue
-                            canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height(), scaleNumPaint);
+                            canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                             /**
                              * Code for making color change of current scale
 
@@ -620,7 +622,7 @@ public class RNScrollRuler extends View  {
                     //当滑动出范围的话，不绘制，去除左右边界
                 } else {
                     //绘制小数刻度
-                    canvas.drawLine(0, midScaleHeight, 0, smallScaleHeight, smallScalePaint);
+                    canvas.drawLine(0, midScaleHeight+45, 0, smallScaleHeight+25, smallScalePaint);
                 }
             }
             ++num1;  //刻度加1
@@ -634,7 +636,7 @@ public class RNScrollRuler extends View  {
         // reposition the bottom line and color
         //lagScalePaint.setColor(getResources().getColor(R.color.result_text_color));
         lagScalePaint.setColor(Color.parseColor(this.markerColor));
-        canvas.drawLine(width / 2, resultNumRect.height()- 180, width / 2, midScaleHeight , lagScalePaint);
+        canvas.drawLine(width / 2, resultNumRect.height()- 180, width / 2, midScaleHeight+48 , lagScalePaint);
 
     }
 
@@ -694,7 +696,7 @@ public class RNScrollRuler extends View  {
         //CHANGES
         resultRectPaint = new Paint();
         resultRectPaint.setStyle(Paint.Style.FILL);
-       // resultRectPaint.setColor(getResources().getColor(R.color.result_text_color));
+        //resultRectPaint.setColor(getResources().getColor(R.color.num_color));
         resultRectPaint.setColor(Color.parseColor(this.markerColor));
 
         resultRectPaint.setStrokeWidth(4);
@@ -710,16 +712,18 @@ public class RNScrollRuler extends View  {
             resultText = "0";
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
             resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
+
             //resultNumPaint.setColor(getResources().getColor(R.color.white));
             resultNumPaint.setColor(Color.parseColor(this.markerTextColor));
-           // canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height(), resultNumPaint);
+            // canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height(), resultNumPaint);
             canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 145, resultNumPaint);
 
         } else {
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
             resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
-           // resultNumPaint.setColor(getResources().getColor(R.color.white));
+            // resultNumPaint.setColor(getResources().getColor(R.color.white));
             resultNumPaint.setColor(Color.parseColor(this.markerTextColor));
+            resultNumPaint.setTypeface(Typeface.DEFAULT_BOLD);
 
             // canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 120, resultNumPaint);
             if(this.isTime){
@@ -739,7 +743,8 @@ public class RNScrollRuler extends View  {
 
 
     private void drawBg(Canvas canvas) {
-        bgRect.set(0, 0, width, height);
+        bgRect.set(0, 0, width, height-20);
+        //bgRect.set(0, 0, width, height - 60);
         //bgPaint.setColor(getResources().getColor(R.color.yellow));
         if (isBgRoundRect) {
             canvas.drawRoundRect(bgRect, 50, 50, bgPaint); //20->椭圆的用于圆形角x-radius
