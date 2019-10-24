@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 
 import android.media.MediaPlayer;
 import  android.graphics.Path;
+import android.widget.Toast;
 
 /**
  * @author shenhuniurou
@@ -188,7 +189,7 @@ public class RNScrollRuler extends View  {
 
     private String  markerTextColor = "#ffffff";
     private String markerColor  = "#ff8d2a";
-
+    private  int maxScaleValue  = 100;
     MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.ticker);
 
     public static void setContext(Context context) {
@@ -577,43 +578,42 @@ public class RNScrollRuler extends View  {
                     //当滑动出范围的话，不绘制，去除左右边界
                 } else {
                     //绘制刻度，绘制刻度数字
-                    canvas.drawLine(0, 25, 0, midScaleHeight+48, midScalePaint);
+
                     if (num1 == 0 && minScale == 0) {
+                        canvas.drawLine(0, 25, 0, midScaleHeight+48, midScalePaint);
                         scaleNumPaint.getTextBounds("0", 0, "0".length(), scaleNumRect);
-                        // checking time paramter and drawing the scale value
-                        //canvas.drawText("0", -scaleNumRect.width() / 2, lagScaleHeight + (rulerHeight - lagScaleHeight) / 2 + scaleNumRect.height(), scaleNumPaint);
                         canvas.drawText("0",  -scaleNumRect.width() / 2 , -resultNumRect.height() + 40, scaleNumPaint);
-                    } else {
+                    } else  {
+
                         int rulerValue = (num1 / scaleCount + minScale) * scaleLimit;
-                        scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
+                        if(rulerValue >  maxScaleValue  ){
 
-                        // checking time paramter and drawing the scale value
-                        if(this.isTime){
-                            String newFormatedValue =  this.transformSecondsToMinutes(rulerValue);
-                            //canvas.drawText( newFormatedValue, -scaleNumRect.width() / 2, lagScaleHeight + (rulerHeight - lagScaleHeight) / 2 + scaleNumRect.height(), scaleNumPaint);
-
-                            // reposition the scale value
-                            canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                         }else{
-                            // canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", -scaleNumRect.width() / 2, lagScaleHeight + (rulerHeight - lagScaleHeight) / 2 + scaleNumRect.height(), scaleNumPaint);
+                            canvas.drawLine(0, 25, 0, midScaleHeight+48, midScalePaint);
+                            scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
 
-                            // reposition the scale vlaue
-                            canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
-                            /**
-                             * Code for making color change of current scale
-
-                             Log.i("CREATE FILE", "currentScale "+(int) currentScale + "resultText "+ resultText);
-
-                             String compareResultText  =  String.valueOf((int) currentScale);
-                             if( resultText.equals(compareResultText)){
-                             scaleNumPaint.setColor(getResources().getColor(R.color.result_text_color));
-                             canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height() - rulerToResultgap / 6, scaleNumPaint);
-                             }else{
-                             canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height() - rulerToResultgap / 6, scaleNumPaint);
-                             }
-                             */
-
+                            // checking time paramter and drawing the scale value
+                            if(this.isTime){
+                                String newFormatedValue =  this.transformSecondsToMinutes(rulerValue);
+                                // reposition the scale value
+                                canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
+                            }else{
+                                // reposition the scale vlaue
+                                canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
+                                /**
+                                 * Code for making color change of current scale
+                                 Log.i("CREATE FILE", "currentScale "+(int) currentScale + "resultText "+ resultText);
+                                 String compareResultText  =  String.valueOf((int) currentScale);
+                                 if( resultText.equals(compareResultText)){
+                                 scaleNumPaint.setColor(getResources().getColor(R.color.result_text_color));
+                                 canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height() - rulerToResultgap / 6, scaleNumPaint);
+                                 }else{
+                                 canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height() - rulerToResultgap / 6, scaleNumPaint);
+                                 }
+                                 */
+                            }
                         }
+
                     }
                 }
 
@@ -626,6 +626,7 @@ public class RNScrollRuler extends View  {
                 }
             }
             ++num1;  //刻度加1
+            //Toast.makeText(sContext, "num1: "+ num1, Toast.LENGTH_SHORT).show();
             rulerRight += scaleGap;  //绘制屏幕的距离在原有基础上+1个刻度间距
             canvas.translate(scaleGap, 0); //移动画布到下一个刻度
         }
@@ -801,6 +802,7 @@ public class RNScrollRuler extends View  {
     }
 
     public void setMaxScale(int maxScale) {
+        this.maxScaleValue  = maxScale;
         this.maxScale = maxScale / scaleLimit;
         invalidate();
     }
