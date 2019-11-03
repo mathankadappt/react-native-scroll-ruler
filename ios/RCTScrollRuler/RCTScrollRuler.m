@@ -78,10 +78,13 @@
 @property (nonatomic,assign)NSInteger betweenNumber;
 @property (nonatomic,assign)int minValue;
 @property (nonatomic,assign)int maxValue;
+@property (nonatomic,assign)int defaultValue;
 @property (nonatomic,assign)BOOL isTime;
 @property (nonatomic,assign)NSString *markerColor;
 @property (nonatomic,assign)NSString *markerTextColor;
 @property (nonatomic,assign)float step;
+@property (nonatomic,assign)NSInteger row;
+@property (nonatomic,assign)NSInteger totalRows;
 
 @end
 @implementation DYRulerView
@@ -90,9 +93,10 @@
 -(void)drawRect:(CGRect)rect{
     CGFloat startX = 0;
     CGFloat lineCenterX = RulerGap;
-    CGFloat shortLineY  = rect.size.height - RulerShort;
-    CGFloat longLineY = rect.size.height - RulerLong;
     CGFloat topY = rect.size.height;
+    CGFloat shortLineY  = topY-(rect.size.height - RulerLong);
+    CGFloat longLineY = topY-(rect.size.height - RulerShort);
+    
     
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextSetRGBStrokeColor(context, (float)192/255.0, (float)192/255.0, (float)192/255.0, 1.0);//设置线的颜色，默认是黑色
@@ -110,16 +114,27 @@
                 NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
                 NSString *num = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
                 //NSString *num = [NSString stringWithFormat:@"%d:%d", minutes, seconds];
-                NSLog(@"Num: %@, Step : %f, Min : %d, i: %d ",num, _step, _minValue, i );
+                // NSLog(@"Num: %@, Step : %f, Min : %d, i: %d ",num, _step, _minValue, i );
                 if ([num isEqualToString:@"0"]||[num isEqualToString:@"0:00"]) {
-                    num = @"";
+                    num = @"0";
                 }
                 
                 
-                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
+                //NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
+                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
+                
                 
                 CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
-                [num drawInRect:CGRectMake(startX+lineCenterX*i-width/2, longLineY-14, width, 16) withAttributes:attribute];
+                
+                CGFloat predictedX = startX+lineCenterX*i-width/2;
+                if(self.row == 0 && i == 0){
+                    predictedX = (startX+lineCenterX*i-width/2)+width/2;
+                }
+                else if(self.row == self.totalRows-1 && i > 0 ){
+                    predictedX = (startX+lineCenterX*i-width/2)-width/2;
+                }
+                [num drawInRect:CGRectMake(predictedX, longLineY-14, width, 16) withAttributes:attribute];
+                CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [UIColor lightGrayColor].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
             }else{
@@ -128,19 +143,44 @@
             CGContextStrokePath(context);//开始绘制
         }
     }else{
+        NSLog(@" between : %ld", (long)_betweenNumber);
         for (int i = 0; i <= _betweenNumber; i ++){
+            
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
+            
             if (i%_betweenNumber == 0){
+                
                 NSString *num = [NSString stringWithFormat:@"%d", (int)(i * _step) + _minValue];
                 if ([num isEqualToString:@"0"]) {
-                    num = @"";
+                    //num = @"0";
+                    if(isTime == false){
+                        num = @"0";
+                    }else{
+                        num = @"0:0";
+                    }
+                }
+                NSLog(@" between : %ld, %d, %@", (long)_betweenNumber, i, num);
+                //NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
+                
+                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
+
+                
+                CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
+                
+                CGFloat predictedX = startX+lineCenterX*i-width/2;
+                if(self.row == 0 && i == 0){
+                    predictedX = (startX+lineCenterX*i-width/2)+width/2;
+                }
+                else if(self.row == self.totalRows-1 && i > 0 ){
+                    predictedX = (startX+lineCenterX*i-width/2)-width/2;
                 }
                 
-                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
-                CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
-                [num drawInRect:CGRectMake(startX+lineCenterX*i-width/2, longLineY-14, width, 16) withAttributes:attribute];
+                [num drawInRect:CGRectMake(predictedX, longLineY-14, width, 16) withAttributes:attribute];
+                CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
+                CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
             }else{
+                CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
             }
             CGContextStrokePath(context);//开始绘制
@@ -205,6 +245,7 @@
 @implementation DYFooterRulerView
 
 -(void)drawRect:(CGRect)rect{
+    
     CGFloat longLineY = rect.size.height - RulerShort;
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextSetRGBStrokeColor(context, (float)192/255.0, (float)192/255.0, (float)192/255.0, 1.0);
@@ -213,6 +254,7 @@
     
     CGContextMoveToPoint(context, 0, 0);//起始点
     NSString *num = [NSString stringWithFormat:@"%d",_maxValue];
+    NSLog(@"%@",num);
     NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont,NSForegroundColorAttributeName:[UIColor lightGrayColor]};
     CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
     [num drawInRect:CGRectMake(0-width/2, longLineY+10, width, 16) withAttributes:attribute];
@@ -243,6 +285,7 @@
 @property(nonatomic, assign)BOOL           isTime;
 @property(nonatomic, assign)NSString *markerColor;
 @property(nonatomic, assign)NSString *markerTextColor;
+@property (assign) SystemSoundID pewPewSound;
 @end
 @implementation RCTScrollRuler
 
@@ -252,9 +295,9 @@
     _minValue = minValue;
     
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor whiteColor];
+    _bgColor    = [UIColor greenColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor whiteColor];
+    self.backgroundColor    = [UIColor clearColor];
     
     
     
@@ -272,9 +315,9 @@
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _maxValue = maxValue;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor whiteColor];
+    _bgColor    = [UIColor clearColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor whiteColor];
+    self.backgroundColor    = [UIColor clearColor];
     
     // [self addSubview:self.valueLab];
     [self addSubview:self.unitLab];
@@ -291,9 +334,9 @@
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _isTime = isTime;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor whiteColor];
+    _bgColor    = [UIColor clearColor];
     _triangleColor         = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor whiteColor];
+    self.backgroundColor    = [UIColor clearColor];
     
     //[self addSubview:self.valueLab];
     [self addSubview:self.unitLab];
@@ -311,10 +354,10 @@
     _markerColor = markerColor;
     
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor whiteColor];
+    _bgColor    = [UIColor clearColor];
     
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor whiteColor];
+    self.backgroundColor    = [UIColor clearColor];
     
     //[self addSubview:self.valueLab];
     [self addSubview:self.unitLab];
@@ -325,7 +368,8 @@
     self.unitLab.text = _unit;
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     //self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
-    _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
+    //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
+    _triangle.triangleColor     = [UIColor orangeColor];
     [self addTriangleTipToLayer:_valueLab.layer];
     [self bringSubviewToFront:_valueLab];
     [self addSubview:self.valueLab];
@@ -333,14 +377,15 @@
 
 
 - (void)setMarkerTextColor:(NSString *)markerTextColor{
+    
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     
     _markerTextColor = markerTextColor;
     
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor whiteColor];
+    _bgColor    = [UIColor clearColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor whiteColor];
+    self.backgroundColor    = [UIColor clearColor];
     
     // [self addSubview:self.valueLab];
     [self addSubview:self.unitLab];
@@ -351,7 +396,8 @@
     self.unitLab.text = _unit;
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
-    _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
+    //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
+    _triangle.triangleColor     = [UIColor orangeColor];
     [self addSubview:self.valueLab];
 }
 
@@ -360,9 +406,9 @@
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _step = step;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor whiteColor];
+    _bgColor    = [UIColor clearColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor whiteColor];
+    self.backgroundColor    = [UIColor clearColor];
     
     // [self addSubview:self.valueLab];
     [self addSubview:self.unitLab];
@@ -374,7 +420,7 @@
     [self addSubview:self.valueLab];
 }
 
-- (void)setDefaultValue:(float)defaultValue {
+- (void)setDefaultValue:(int)defaultValue {
     NSLog(@"设置默认值");
     _defaultValue      = defaultValue;
     if (_maxValue != 0) {
@@ -390,9 +436,9 @@
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _num = num;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor whiteColor];
+    _bgColor    = [UIColor clearColor];
     //_triangleColor         = [UIColor yellowColor];// //_triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor whiteColor];
+    self.backgroundColor    = [UIColor clearColor];
     
     //[self addSubview:self.valueLab];
     // [self addSubview:self.unitLab];
@@ -409,9 +455,9 @@
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _unit = unit;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor whiteColor];
+    _bgColor    = [UIColor clearColor];
     //_triangleColor         = [UIColor redColor];// = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor whiteColor];
+    self.backgroundColor    = [UIColor clearColor];
     
     //[self addSubview:self.valueLab];
     // [self addSubview:self.unitLab];
@@ -423,7 +469,7 @@
     [self addSubview:self.valueLab];
 }
 
--(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor {
+-(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor {
     
     self = [super initWithFrame:frame];
     if (self) {
@@ -437,9 +483,9 @@
         _markerColor = markerColor;
         markerTextColor = markerTextColor;
         
-        _bgColor    = [UIColor whiteColor];
+        _bgColor    = [UIColor clearColor];
         _triangleColor          = [UIColor greenColor];//[RCTScrollRuler colorFromHexString:_markerColor];
-        self.backgroundColor    = [UIColor whiteColor];
+        self.backgroundColor    = [UIColor clearColor];
         
         //[self addSubview:self.valueLab];
         //[self addSubview:self.unitLab];
@@ -473,12 +519,12 @@
     
     CGFloat side = targetLayer.frame.size.height;
     
-    CGPoint startPoint = CGPointMake(targetLayer.frame.size.width / 2 - 10 / 2, side);
-    CGPoint endPoint = CGPointMake(targetLayer.frame.size.width / 2 + 10  / 2, side);
+    CGPoint startPoint = CGPointMake(targetLayer.frame.size.width / 2 - 20 / 2, side);
+    CGPoint endPoint = CGPointMake(targetLayer.frame.size.width / 2 + 20  / 2, side);
     UIBezierPath *trianglePath = [UIBezierPath bezierPath];
     
     CGFloat middleX = targetLayer.frame.size.width / 2;
-    CGFloat middleY = (side / 2) * tan(M_PI / 3) + 10;
+    CGFloat middleY = (side / 2) * tan(M_PI / 3) + 15;
     CGPoint middlePoint = CGPointMake(middleX, middleY);
     
     [trianglePath moveToPoint:startPoint];
@@ -497,8 +543,10 @@
         // _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-0.5-TrangleWidth/2, CGRectGetMaxY(_valueLab.frame), TrangleWidth, TrangleWidth)];
         //   _triangle.backgroundColor   = [UIColor clearColor];
         //   _triangle.triangleColor     = _triangleColor;
-        _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-0.5, CGRectGetMaxY(_valueLab.frame), 1, IndicatorHeight)];
-        //_triangle.backgroundColor   = [UIColor orangeColor];
+        _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake((self.bounds.size.width/2)+9, CGRectGetMaxY(_valueLab.frame), 1, IndicatorHeight + 20)];
+       // _triangle.backgroundColor   = [UIColor orangeColor];
+        
+       // _triangle.triangleColor     = [UIColor orangeColor];//[RCTScrollRuler colorFromHexString:[UIColor orangeColor]];
         _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
         //[self addTriangleTipToLayer:_valueLab.superview.layer];
         //[self addTriangleTipToLayer:_triangle.layer];
@@ -510,7 +558,7 @@
         UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc]init];
         [flowLayout setScrollDirection:UICollectionViewScrollDirectionHorizontal];
         [flowLayout setSectionInset:UIEdgeInsetsMake(0, 0, 0, 0)];
-        _collectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(-10, CGRectGetMaxY(_valueLab.frame) + 30, self.bounds.size.width + 20, CollectionHeight) collectionViewLayout:flowLayout];
+        _collectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(0, CGRectGetMaxY(_valueLab.frame) + 30, self.bounds.size.width + 20, CollectionHeight) collectionViewLayout:flowLayout];
         _collectionView.backgroundColor = _bgColor;
         _collectionView.bounces         = YES;
         _collectionView.showsHorizontalScrollIndicator  = NO;
@@ -527,7 +575,7 @@
 }
 -(UILabel *)valueLab{
     if (!_valueLab) {
-        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-40, -12, 80, 40)];
+        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-30, -20, 80, 40)];
         _valueLab.textColor = [UIColor whiteColor];//[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
         
         //set the label to fit text content before rendered as a image
@@ -552,7 +600,8 @@
         //        [_valueLab.layer addSublayer:triangleMaskLayer];
         if(![_markerColor isEqualToString:@"0"]){
             _valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];;
-            _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
+            //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
+            _triangle.triangleColor     = [UIColor orangeColor];
         }
         [self addTriangleTipToLayer:_valueLab.layer];
         [_valueLab setFont:[UIFont fontWithName:@"Helvetica-Bold" size:20]];
@@ -600,7 +649,8 @@
         _unitLab.hidden = NO;
         //_valueLab.text = [NSString stringWithFormat:@"%d", n];
     }
-    [_collectionView setContentOffset:CGPointMake((int)realValue*RulerGap, 0) animated:animated];
+    int initalPadding = realValue == 0 ? 0: 0;
+    [_collectionView setContentOffset:CGPointMake((realValue*RulerGap)+initalPadding, 0) animated:animated];
 }
 
 +(CGFloat)rulerViewHeight{
@@ -645,12 +695,12 @@
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"custemCell" forIndexPath:indexPath];
         DYRulerView *rulerView = [cell.contentView viewWithTag:1002];
         if (!rulerView){
-            rulerView  = [[DYRulerView alloc]initWithFrame:CGRectMake(0, -20, RulerGap*_betweenNum, CollectionHeight)];
+            rulerView  = [[DYRulerView alloc]initWithFrame:CGRectMake(0, 0, RulerGap*_betweenNum, CollectionHeight)];
             rulerView.tag               = 1002;
             rulerView.step              = _step;
             rulerView.betweenNumber     = _betweenNum;
             rulerView.markerColor = _markerColor;
-            // rulerView.backgroundColor  = [UIColor blueColor];
+            // rulerView.backgroundColor  = [UIColor whiteColor];
             [cell.contentView addSubview:rulerView];
         }
         //        if(indexPath.item>=8 && indexPath.item<=12){
@@ -660,11 +710,17 @@
         //        }else{
         //            rulerView.backgroundColor   =  [UIColor grayColor];
         //        }
+        
         rulerView.backgroundColor   =  [UIColor whiteColor];
         rulerView.minValue = (int)(_step*(indexPath.item-1)*_betweenNum+_minValue);
         rulerView.maxValue = (int)(_step*indexPath.item*_betweenNum);
+        rulerView.defaultValue = (int)(_defaultValue);
         rulerView.markerColor = _markerColor;
         rulerView.isTime = _isTime;
+        rulerView.row               = indexPath.item-1;
+        rulerView.totalRows         = _stepNum;
+        
+        
         // rulerView.backgroundColor  = [UIColor yellowColor];
         [rulerView setNeedsDisplay];
         //CGAffineTransform move = CGAffineTransformMakeRotation(110);//CGAffineTransformMakeTranslation(1, 1);
@@ -676,8 +732,10 @@
 -(CGSize )collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     if (indexPath.item == 0 || indexPath.item == _stepNum+1){
+        
         return CGSizeMake(self.frame.size.width/2, CollectionHeight);
     }else{
+        NSLog(@"LARGE LINE");
         return CGSizeMake(RulerGap*_betweenNum, CollectionHeight);
     }
 }
@@ -694,7 +752,25 @@
 #pragma mark play sound
 
 - (void)playAudio {
-    [self playSound:@"tickering" :@"mp3"];
+    [self playSound:@"background-music-aac" :@"caf"];
+//    NSString *path = [[NSBundle mainBundle] pathForResource : @"tickering" ofType :@"mp3"];
+//    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
+//        NSURL *pathURL = [NSURL fileURLWithPath: path];
+//        AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithContentsOfURL:pathURL error:nil];
+//        player.numberOfLoops = -1; //Infinite
+//
+//        [player play];
+//    }
+    
+    //NSString *soundFilePath = [NSString stringWithFormat:@"%@/test.m4a",[[NSBundle mainBundle] resourcePath]];
+    //NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
+    
+    
+    
+}
+
+- (void)playSystemSound {
+    AudioServicesPlaySystemSound(self.pewPewSound);
 }
 
 - (void)playSound :(NSString *)fName :(NSString *) ext{
@@ -702,7 +778,7 @@
     NSString *path = [[NSBundle mainBundle] pathForResource : fName ofType :ext];
     if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
         NSURL *pathURL = [NSURL fileURLWithPath: path];
-        AudioServicesCreateSystemSoundID((__bridge CFURLRef) pathURL, &audioEffect);
+        AudioServicesCreateSystemSoundID((__bridge CFURLRef) pathURL, &_pewPewSound);
         //AudioServicesCreateSystemSoundID(audioEffect);
         //AudioServicesCreateSystemSoundID(<#CFURLRef  _Nonnull inFileURL#>, <#SystemSoundID * _Nonnull outSystemSoundID#>)
     }
@@ -758,6 +834,8 @@
                 _valueLab.text = [NSString stringWithFormat:@"%d",(value*_step) +_minValue];
             }
         }
+    }else{
+        _valueLab.text = [NSString stringWithFormat:@"%d",_defaultValue];
     }
 }
 
