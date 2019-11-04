@@ -60,7 +60,7 @@ RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
 
 #pragma RCTScrollRulerDelegate
 -(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value{
-    // rulerView.onSelect(@{@"value": @((int)value)});
+     rulerView.onSelect(@{@"value": @((int)value)});
 }
 
 @end
