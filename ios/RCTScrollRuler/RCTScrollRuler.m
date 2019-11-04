@@ -78,6 +78,7 @@
 @property (nonatomic,assign)NSInteger betweenNumber;
 @property (nonatomic,assign)int minValue;
 @property (nonatomic,assign)int maxValue;
+@property (nonatomic,assign)int totalMaxValue;
 @property (nonatomic,assign)int defaultValue;
 @property (nonatomic,assign)BOOL isTime;
 @property (nonatomic,assign)NSString *markerColor;
@@ -91,6 +92,7 @@
 @synthesize isTime;
 
 -(void)drawRect:(CGRect)rect{
+    
     CGFloat startX = 0;
     CGFloat lineCenterX = RulerGap;
     CGFloat topY = rect.size.height;
@@ -144,18 +146,20 @@
             CGContextStrokePath(context);//开始绘制
         }
     }else{
-        NSLog(@" between : %ld", (long)_betweenNumber);
+        
         for (int i = 0; i <= _betweenNumber; i ++){
             
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
             int tempInt = (int)(i * _step) + _minValue;
-            
+            if(tempInt > _totalMaxValue){
+                return;
+            }
             
             if (tempInt%10 == 0){
                 
                 NSString *num = [NSString stringWithFormat:@"%d", (int)(i * _step) + _minValue];
                 if ([num isEqualToString:@"0"]) {
-                    //num = @"0";
+                    
                     if(isTime == false){
                         num = @"0";
                     }else{
@@ -297,7 +301,7 @@
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _minValue = minValue;
     
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
     _bgColor    = [UIColor greenColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
     self.backgroundColor    = [UIColor clearColor];
@@ -317,7 +321,7 @@
     NSLog(@"设置最大值");
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _maxValue = maxValue;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum+1;
     _bgColor    = [UIColor clearColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
     self.backgroundColor    = [UIColor clearColor];
@@ -336,7 +340,7 @@
     NSLog(@"设置最大值");
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _isTime = isTime;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
     _bgColor    = [UIColor clearColor];
     _triangleColor         = [RCTScrollRuler colorFromHexString:_markerColor];
     self.backgroundColor    = [UIColor clearColor];
@@ -356,7 +360,7 @@
     
     _markerColor = markerColor;
     
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
     _bgColor    = [UIColor clearColor];
     
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
@@ -385,7 +389,7 @@
     
     _markerTextColor = markerTextColor;
     
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
     _bgColor    = [UIColor clearColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
     self.backgroundColor    = [UIColor clearColor];
@@ -408,7 +412,7 @@
     NSLog(@"设置步长");
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _step = step;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
     _bgColor    = [UIColor clearColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
     self.backgroundColor    = [UIColor clearColor];
@@ -438,7 +442,7 @@
     NSLog(@"设置间隔");
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _num = num;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
     _bgColor    = [UIColor clearColor];
     //_triangleColor         = [UIColor yellowColor];// //_triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
     self.backgroundColor    = [UIColor clearColor];
@@ -480,7 +484,7 @@
         _maxValue   = maxValue;
         _step       = step;
         _unit       = unit;
-        _stepNum    = (_maxValue-_minValue)/_step/betweenNum;
+        _stepNum    = (_maxValue-_minValue)/_step/betweenNum + 1;
         _betweenNum = betweenNum;
         _isTime = isTime;
         _markerColor = markerColor;
@@ -663,9 +667,12 @@
 #pragma mark UICollectionViewDataSource & Delegate
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
+    
+    
     return 2+_stepNum;
 }
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
+    
     if (indexPath.item == 0){
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"headCell" forIndexPath:indexPath];
         DYHeaderRulerView *headerView = [cell.contentView viewWithTag:1000];
@@ -677,8 +684,7 @@
             //headerView.backgroundColor = UIColor.redColor;
             [cell.contentView addSubview:headerView];
         }
-        CGAffineTransform move = CGAffineTransformMakeRotation(110);//CGAffineTransformMakeTranslation(1, 1);
-        //cell.transform = CGAffineTransformRotate(move, 0.0);
+        
         
         return cell;
     }else if( indexPath.item == _stepNum +1){
@@ -691,8 +697,7 @@
             footerView.maxValue         = _maxValue;
             [cell.contentView addSubview:footerView];
         }
-        CGAffineTransform move = CGAffineTransformMakeRotation(110);//CGAffineTransformMakeTranslation(1, 1);
-        //cell.transform = CGAffineTransformRotate(move, 0.0);
+        
         return cell;
     }else{
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"custemCell" forIndexPath:indexPath];
@@ -706,28 +711,20 @@
             // rulerView.backgroundColor  = [UIColor whiteColor];
             [cell.contentView addSubview:rulerView];
         }
-        //        if(indexPath.item>=8 && indexPath.item<=12){
-        //            rulerView.backgroundColor   =  [UIColor greenColor];
-        //        }else if(indexPath.item>=13 && indexPath.item<=18){
-        //            rulerView.backgroundColor   =  [UIColor redColor];
-        //        }else{
-        //            rulerView.backgroundColor   =  [UIColor grayColor];
-        //        }
+        
         
         rulerView.backgroundColor   =  [UIColor whiteColor];
         rulerView.minValue = (int)(_step*(indexPath.item-1)*_betweenNum+_minValue);
         rulerView.maxValue = (int)(_step*indexPath.item*_betweenNum);
+        rulerView.totalMaxValue = _maxValue;
         rulerView.defaultValue = (int)(_defaultValue);
         rulerView.markerColor = _markerColor;
         rulerView.isTime = _isTime;
         rulerView.row               = indexPath.item-1;
         rulerView.totalRows         = _stepNum;
         
-        
-        // rulerView.backgroundColor  = [UIColor yellowColor];
         [rulerView setNeedsDisplay];
-        //CGAffineTransform move = CGAffineTransformMakeRotation(110);//CGAffineTransformMakeTranslation(1, 1);
-        //cell.transform = CGAffineTransformRotate(move, 0.0);
+        
         return cell;
     }
 }
@@ -755,7 +752,7 @@
 #pragma mark play sound
 
 - (void)playAudio {
-    [self playSound:@"background-music-aac" :@"caf"];
+    //  [self playSound:@"background-music-aac" :@"caf"];
     //    NSString *path = [[NSBundle mainBundle] pathForResource : @"tickering" ofType :@"mp3"];
     //    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
     //        NSURL *pathURL = [NSURL fileURLWithPath: path];
@@ -838,7 +835,7 @@
             }
         }
     }else{
-        _valueLab.text = [NSString stringWithFormat:@"%d",_defaultValue];
+        // _valueLab.text = [NSString stringWithFormat:@"%d",_defaultValue];
     }
 }
 
