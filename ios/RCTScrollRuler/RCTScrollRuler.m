@@ -106,7 +106,8 @@
     if(isTime == true){
         for (int i = 0; i <= _betweenNumber; i ++){
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
-            if (i%_betweenNumber == 0){
+            int tempInt = (int)(i * _step) + _minValue;
+            if (tempInt%10 == 0){
                 int numeric = (int)(i * _step) + _minValue;
                 
                 int minutes =  floor(numeric / 60);
@@ -147,8 +148,10 @@
         for (int i = 0; i <= _betweenNumber; i ++){
             
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
+            int tempInt = (int)(i * _step) + _minValue;
             
-            if (i%_betweenNumber == 0){
+            
+            if (tempInt%10 == 0){
                 
                 NSString *num = [NSString stringWithFormat:@"%d", (int)(i * _step) + _minValue];
                 if ([num isEqualToString:@"0"]) {
@@ -163,7 +166,7 @@
                 //NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
                 
                 NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
-
+                
                 
                 CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
                 
@@ -249,7 +252,7 @@
     CGFloat longLineY = rect.size.height - RulerShort;
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextSetRGBStrokeColor(context, (float)192/255.0, (float)192/255.0, (float)192/255.0, 1.0);
-    CGContextSetLineWidth(context, 1.0);
+    CGContextSetLineWidth(context, 0.0);
     CGContextSetLineCap(context, kCGLineCapButt);
     
     CGContextMoveToPoint(context, 0, 0);//起始点
@@ -301,7 +304,7 @@
     
     
     
-    [self addSubview:self.unitLab];
+    //[self addSubview:self.unitLab];
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
     //[self addSubview:self.grayLine];
@@ -544,9 +547,9 @@
         //   _triangle.backgroundColor   = [UIColor clearColor];
         //   _triangle.triangleColor     = _triangleColor;
         _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake((self.bounds.size.width/2)+9, CGRectGetMaxY(_valueLab.frame), 1, IndicatorHeight + 20)];
-       // _triangle.backgroundColor   = [UIColor orangeColor];
+        // _triangle.backgroundColor   = [UIColor orangeColor];
         
-       // _triangle.triangleColor     = [UIColor orangeColor];//[RCTScrollRuler colorFromHexString:[UIColor orangeColor]];
+        // _triangle.triangleColor     = [UIColor orangeColor];//[RCTScrollRuler colorFromHexString:[UIColor orangeColor]];
         _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
         //[self addTriangleTipToLayer:_valueLab.superview.layer];
         //[self addTriangleTipToLayer:_triangle.layer];
@@ -753,14 +756,14 @@
 
 - (void)playAudio {
     [self playSound:@"background-music-aac" :@"caf"];
-//    NSString *path = [[NSBundle mainBundle] pathForResource : @"tickering" ofType :@"mp3"];
-//    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
-//        NSURL *pathURL = [NSURL fileURLWithPath: path];
-//        AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithContentsOfURL:pathURL error:nil];
-//        player.numberOfLoops = -1; //Infinite
-//
-//        [player play];
-//    }
+    //    NSString *path = [[NSBundle mainBundle] pathForResource : @"tickering" ofType :@"mp3"];
+    //    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
+    //        NSURL *pathURL = [NSURL fileURLWithPath: path];
+    //        AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithContentsOfURL:pathURL error:nil];
+    //        player.numberOfLoops = -1; //Infinite
+    //
+    //        [player play];
+    //    }
     
     //NSString *soundFilePath = [NSString stringWithFormat:@"%@/test.m4a",[[NSBundle mainBundle] resourcePath]];
     //NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
