@@ -15,10 +15,10 @@
 
 #define RulerGap        12 //单位距离
 #define RulerLong       35
-#define IndicatorHeight  79
+#define IndicatorHeight  109
 #define RulerShort      20
 #define TrangleWidth    16
-#define CollectionHeight 70
+#define CollectionHeight 80
 
 #import "RCTScrollRuler.h"
 #import <CoreGraphics/CoreGraphics.h>
@@ -34,8 +34,9 @@
 
 -(void)drawRect:(CGRect)rect{
     //设置背景颜色
-    [[UIColor clearColor]set];
     
+    //[[UIColor clearColor]set];
+    [[UIColor orangeColor]set];
     UIRectFill([self bounds]);
     
     //拿到当前视图准备好的画板
@@ -79,6 +80,7 @@
 @property (nonatomic,assign)int minValue;
 @property (nonatomic,assign)int maxValue;
 @property (nonatomic,assign)int totalMaxValue;
+@property (nonatomic,assign)int baseMinValue;
 @property (nonatomic,assign)int defaultValue;
 @property (nonatomic,assign)BOOL isTime;
 @property (nonatomic,assign)NSString *markerColor;
@@ -155,7 +157,7 @@
                 return;
             }
             
-            if (tempInt%10 == 0){
+            if ((tempInt%_betweenNumber == 0)||(tempInt == _totalMaxValue)||(tempInt == _baseMinValue)){
                 
                 NSString *num = [NSString stringWithFormat:@"%d", (int)(i * _step) + _minValue];
                 if ([num isEqualToString:@"0"]) {
@@ -166,7 +168,7 @@
                         num = @"0:0";
                     }
                 }
-                NSLog(@" between : %ld, %d, %@", (long)_betweenNumber, i, num);
+                
                 //NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
                 
                 NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
@@ -550,11 +552,13 @@
         // _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-0.5-TrangleWidth/2, CGRectGetMaxY(_valueLab.frame), TrangleWidth, TrangleWidth)];
         //   _triangle.backgroundColor   = [UIColor clearColor];
         //   _triangle.triangleColor     = _triangleColor;
-        _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake((self.bounds.size.width/2)+9, CGRectGetMaxY(_valueLab.frame), 1, IndicatorHeight + 20)];
+        _triangle = [[DYTriangleView alloc]initWithFrame:CGRectMake((self.bounds.size.width/2)+9, CGRectGetMaxY(_valueLab.frame), 2, IndicatorHeight)];
         // _triangle.backgroundColor   = [UIColor orangeColor];
         
         // _triangle.triangleColor     = [UIColor orangeColor];//[RCTScrollRuler colorFromHexString:[UIColor orangeColor]];
         _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
+        _triangle.tintColor = [RCTScrollRuler colorFromHexString:_markerColor];
+        _triangle.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
         //[self addTriangleTipToLayer:_valueLab.superview.layer];
         //[self addTriangleTipToLayer:_triangle.layer];
     }
@@ -677,7 +681,7 @@
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"headCell" forIndexPath:indexPath];
         DYHeaderRulerView *headerView = [cell.contentView viewWithTag:1000];
         if (!headerView){
-            headerView = [[DYHeaderRulerView alloc]initWithFrame:CGRectMake(0, 20, self.frame.size.width/2, CollectionHeight)];
+            headerView = [[DYHeaderRulerView alloc]initWithFrame:CGRectMake(0, 20, self.frame.size.width/2, CollectionHeight - 10)];
             headerView.backgroundColor  =  [UIColor clearColor];
             headerView.tag              =  1000;
             headerView.minValue         = _minValue;
@@ -691,7 +695,7 @@
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"footerCell" forIndexPath:indexPath];
         DYFooterRulerView *footerView = [cell.contentView viewWithTag:1001];
         if (!footerView){
-            footerView = [[DYFooterRulerView alloc]initWithFrame:CGRectMake(50, 20, self.frame.size.width/2, CollectionHeight)];
+            footerView = [[DYFooterRulerView alloc]initWithFrame:CGRectMake(50, 20, self.frame.size.width/2, CollectionHeight - 10)];
             footerView.backgroundColor  = [UIColor clearColor];
             footerView.tag              = 1001;
             footerView.maxValue         = _maxValue;
@@ -703,7 +707,7 @@
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"custemCell" forIndexPath:indexPath];
         DYRulerView *rulerView = [cell.contentView viewWithTag:1002];
         if (!rulerView){
-            rulerView  = [[DYRulerView alloc]initWithFrame:CGRectMake(0, 0, RulerGap*_betweenNum, CollectionHeight)];
+            rulerView  = [[DYRulerView alloc]initWithFrame:CGRectMake(0, 10, RulerGap*_betweenNum, CollectionHeight - 10)];
             rulerView.tag               = 1002;
             rulerView.step              = _step;
             rulerView.betweenNumber     = _betweenNum;
@@ -717,11 +721,14 @@
         rulerView.minValue = (int)(_step*(indexPath.item-1)*_betweenNum+_minValue);
         rulerView.maxValue = (int)(_step*indexPath.item*_betweenNum);
         rulerView.totalMaxValue = _maxValue;
+        rulerView.baseMinValue = _minValue;
         rulerView.defaultValue = (int)(_defaultValue);
         rulerView.markerColor = _markerColor;
         rulerView.isTime = _isTime;
         rulerView.row               = indexPath.item-1;
         rulerView.totalRows         = _stepNum;
+        
+        
         
         [rulerView setNeedsDisplay];
         
@@ -752,7 +759,8 @@
 #pragma mark play sound
 
 - (void)playAudio {
-    //  [self playSound:@"background-music-aac" :@"caf"];
+    
+    //[self playSound:@"background-music-aac" :@"caf"];
     //    NSString *path = [[NSBundle mainBundle] pathForResource : @"tickering" ofType :@"mp3"];
     //    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
     //        NSURL *pathURL = [NSURL fileURLWithPath: path];
