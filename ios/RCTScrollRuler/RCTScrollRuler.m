@@ -108,12 +108,15 @@
     CGContextSetLineCap(context, kCGLineCapButt);
     
     if(isTime == true){
+        
         for (int i = 0; i <= _betweenNumber; i ++){
+            
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
             int tempInt = (int)(i * _step) + _minValue;
+            
             if (tempInt%10 == 0){
-                int numeric = (int)(i * _step) + _minValue;
                 
+                int numeric = (int)(i * _step) + _minValue;
                 int minutes =  floor(numeric / 60);
                 int seconds = numeric - minutes * 60;
                 NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
@@ -149,17 +152,18 @@
         }
     }else{
         
-        for (int i = 0; i <= _betweenNumber; i ++){
+        for (int i = 0; i <= _betweenNumber * _step ; i = i+1 ){
             
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
-            int tempInt = (int)(i * _step) + _minValue;
+            int tempInt = (int)(i * (_step)) + _minValue;
             if(tempInt > _totalMaxValue){
                 return;
             }
+            int stepInt = (int)_step;
             
-            if ((tempInt%_betweenNumber == 0)||(tempInt == _totalMaxValue)||(tempInt == _baseMinValue)){
+            if ((tempInt%(_betweenNumber*stepInt) == 0)||(tempInt == _totalMaxValue)||(tempInt == _baseMinValue)){
                 
-                NSString *num = [NSString stringWithFormat:@"%d", (int)(i * _step) + _minValue];
+                NSString *num = [NSString stringWithFormat:@"%d", (int)(i * (_step) + _minValue)];
                 if ([num isEqualToString:@"0"]) {
                     
                     if(isTime == false){
@@ -169,10 +173,7 @@
                     }
                 }
                 
-                //NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
-                
                 NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
-                
                 
                 CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
                 
@@ -195,7 +196,6 @@
             CGContextStrokePath(context);//开始绘制
         }
     }
-    
 }
 
 @end
@@ -454,6 +454,19 @@
     [self addSubview:self.collectionView];
     //[self addSubview:self.triangle];
     //[self addSubview:self.grayLine];
+    [self setDefaultValue:_defaultValue];
+    self.unitLab.text = _unit;
+    [self addSubview:self.valueLab];
+}
+
+- (void)setBetweenNum:(NSInteger)betweenNum{
+    
+    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    _betweenNum = betweenNum;
+    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
+    _bgColor    = [UIColor clearColor];
+    self.backgroundColor    = [UIColor clearColor];
+    [self addSubview:self.collectionView];
     [self setDefaultValue:_defaultValue];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
@@ -722,6 +735,7 @@
         rulerView.maxValue = (int)(_step*indexPath.item*_betweenNum);
         rulerView.totalMaxValue = _maxValue;
         rulerView.baseMinValue = _minValue;
+        rulerView.betweenNumber = _betweenNum;
         rulerView.defaultValue = (int)(_defaultValue);
         rulerView.markerColor = _markerColor;
         rulerView.isTime = _isTime;
@@ -801,8 +815,11 @@
     int value = scrollView.contentOffset.x/RulerGap;
     int totalValue = value*_step +_minValue;
     [self playAudio];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:)]) {
-        [self.delegate dyScrollRulerView:self valueChange:totalValue];
+    if(totalValue >= _minValue){
+        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:)]) {
+            [self.delegate dyScrollRulerView:self valueChange:totalValue];
+        }
+        
     }
     _scrollByHand = YES;
     if (_scrollByHand) {
