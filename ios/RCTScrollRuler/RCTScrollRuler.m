@@ -13,16 +13,19 @@
 #define TextRulerFont  [UIFont systemFontOfSize:11]
 #define RulerLineColor [UIColor grayColor]
 
-#define RulerGap        12 //单位距离
-#define RulerLong       35
+#define RulerGap         12 //单位距离
+#define RulerLong        35
 #define IndicatorHeight  109
-#define RulerShort      20
-#define TrangleWidth    16
+#define RulerShort       20
+#define RulerMedium      23
+#define TrangleWidth     16
 #define CollectionHeight 80
 
 #import "RCTScrollRuler.h"
 #import <CoreGraphics/CoreGraphics.h>
 #import <AVFoundation/AVFoundation.h>
+#include <math.h>
+
 /**
  *  绘制三角形标示
  */
@@ -33,13 +36,10 @@
 @implementation DYTriangleView
 
 -(void)drawRect:(CGRect)rect{
-    //设置背景颜色
     
-    //[[UIColor clearColor]set];
     [[UIColor orangeColor]set];
     UIRectFill([self bounds]);
     
-    //拿到当前视图准备好的画板
     CGContextRef context = UIGraphicsGetCurrentContext();
     //CGContextSetRGBStrokeColor(context, 0.0, 1.0, 0.0, 1.0);//设置线的颜色，默认是黑色
     CGContextSetStrokeColorWithColor(context, _triangleColor.CGColor);
@@ -79,6 +79,8 @@
 @property (nonatomic,assign)NSInteger betweenNumber;
 @property (nonatomic,assign)int minValue;
 @property (nonatomic,assign)int maxValue;
+@property (nonatomic,assign)int exponent;
+@property (nonatomic,assign)float exponentFloatValue;
 @property (nonatomic,assign)int totalMaxValue;
 @property (nonatomic,assign)int baseMinValue;
 @property (nonatomic,assign)int defaultValue;
@@ -89,9 +91,33 @@
 @property (nonatomic,assign)NSInteger row;
 @property (nonatomic,assign)NSInteger totalRows;
 
+-(float)calculateExponentValue:(int)exp;
+
 @end
 @implementation DYRulerView
 @synthesize isTime;
+@synthesize exponent;
+@synthesize exponentFloatValue;
+
+
+-(float)calculateExponentValue:(int)exp{
+    
+    //NSLog(@"%f",pow(10, exp));
+    //return 1/pow(10, exp);
+    
+    if(exp == 1){
+        return 0.1;
+    }else if (exp == 2){
+        return 0.01;
+    }else if (exp == 3){
+        return 0.001;
+    }else if (exp == 4){
+        return 0.0001;
+    }else if (exp == 5){
+        return 0.00001;
+    }
+    return 0.1;
+}
 
 -(void)drawRect:(CGRect)rect{
     
@@ -100,6 +126,7 @@
     CGFloat topY = rect.size.height;
     CGFloat shortLineY  = topY-(rect.size.height - RulerLong);
     CGFloat longLineY = topY-(rect.size.height - RulerShort);
+    CGFloat mediumLineY = topY-(rect.size.height - RulerMedium);
     
     
     CGContextRef context = UIGraphicsGetCurrentContext();
@@ -113,7 +140,9 @@
             
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
             int tempInt = (int)(i * _step) + _minValue;
-            
+            if(tempInt > _totalMaxValue){
+                return;
+            }
             if (tempInt%10 == 0){
                 
                 int numeric = (int)(i * _step) + _minValue;
@@ -163,7 +192,23 @@
             
             if ((tempInt%(_betweenNumber*stepInt) == 0)||(tempInt == _totalMaxValue)||(tempInt == _baseMinValue)){
                 
-                NSString *num = [NSString stringWithFormat:@"%d", (int)(i * (_step) + _minValue)];
+                if(exponent > 0){
+                    exponentFloatValue = [self calculateExponentValue:exponent];
+                }else{
+                    exponentFloatValue = 1;
+                }
+                NSString *num;
+                if(exponent > 0){
+                    NSString *formatStr = exponent == 1 ? @"%.1f" : (exponent == 2 ? @"%.2f" : exponent == 3 ? @"%.3f" : exponent == 4 ? @"%.4f" : @"");
+                    num = [NSString stringWithFormat:formatStr, (float)(i * (_step) + _minValue) * exponentFloatValue];
+                    
+                }else{
+                    
+                    num = [NSString stringWithFormat:@"%d", (int)(i * (_step) + _minValue)];
+                    
+                }
+                
+                
                 if ([num isEqualToString:@"0"]) {
                     
                     if(isTime == false){
@@ -172,7 +217,7 @@
                         num = @"0:0";
                     }
                 }
-                
+                //NSLog(@"%f",1/pow(10, tempInt));
                 NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
                 
                 CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
@@ -189,6 +234,10 @@
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
+            }else if(tempInt%(5) == 0){
+                CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
+                CGContextAddLineToPoint(context, startX+lineCenterX*i, mediumLineY);
+                
             }else{
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
@@ -197,6 +246,8 @@
         }
     }
 }
+
+
 
 @end
 
@@ -286,6 +337,8 @@
 @property(nonatomic, assign)int           stepNum;//分多少个区
 @property(nonatomic, assign)int           minValue;//游标的最小值
 @property(nonatomic, assign)int           maxValue;//游标的最大值
+@property(nonatomic, assign)int           exponent;
+@property(nonatomic, assign)float           exponentFloatValue;
 @property(nonatomic, assign)int           step;//间隔值，每两条相隔多少值
 @property(nonatomic, assign)NSInteger     betweenNum;
 @property(nonatomic, strong)NSString      *unit;//单位
@@ -299,7 +352,7 @@
 @implementation RCTScrollRuler
 
 - (void)setMinValue:(int)minValue {
-    NSLog(@"设置最小值");
+    
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _minValue = minValue;
     
@@ -308,13 +361,12 @@
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
     self.backgroundColor    = [UIColor clearColor];
     
-    
-    
     //[self addSubview:self.unitLab];
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
     //[self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
 }
@@ -334,6 +386,7 @@
     [self addSubview:self.triangle];
     // [self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
 }
@@ -353,6 +406,7 @@
     [self addSubview:self.triangle];
     // [self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
 }
@@ -374,6 +428,7 @@
     [self addSubview:self.triangle];
     // [self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     //self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
@@ -402,6 +457,7 @@
     [self addSubview:self.triangle];
     // [self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
@@ -425,6 +481,7 @@
     [self addSubview:self.triangle];
     // [self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
 }
@@ -437,6 +494,11 @@
         [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
     }
     NSLog(@"setDefaultValue被调用了，defaultValue=%.2f", defaultValue);
+}
+
+- (void)setExponentValue:(int)exponent {
+    NSLog(@"设置默认值");
+    _exponent      = exponent;
 }
 
 
@@ -455,6 +517,7 @@
     //[self addSubview:self.triangle];
     //[self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
 }
@@ -468,6 +531,7 @@
     self.backgroundColor    = [UIColor clearColor];
     [self addSubview:self.collectionView];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
 }
@@ -487,16 +551,36 @@
     //[self addSubview:self.triangle];
     //[self addSubview:self.grayLine];
     [self setDefaultValue:_defaultValue];
+    [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
 }
 
--(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor {
+-(float)calculateExponentValue:(int)exp{
+    
+    NSLog(@"%f",pow(10, exp));
+    //return 1/pow(10, exp);
+    if(exp == 1){
+        return 0.1;
+    }else if (exp == 2){
+        return 0.01;
+    }else if (exp == 3){
+        return 0.001;
+    }else if (exp == 4){
+        return 0.0001;
+    }else if (exp == 5){
+        return 0.00001;
+    }
+    return 0.1;
+}
+
+-(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue exponent:(int)exponent defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor {
     
     self = [super initWithFrame:frame];
     if (self) {
         _minValue   = minValue;
         _maxValue   = maxValue;
+        _exponent   = exponent;
         _step       = step;
         _unit       = unit;
         _stepNum    = (_maxValue-_minValue)/_step/betweenNum + 1;
@@ -701,10 +785,10 @@
             //headerView.backgroundColor = UIColor.redColor;
             [cell.contentView addSubview:headerView];
         }
-        
-        
         return cell;
+        
     }else if( indexPath.item == _stepNum +1){
+        
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"footerCell" forIndexPath:indexPath];
         DYFooterRulerView *footerView = [cell.contentView viewWithTag:1001];
         if (!footerView){
@@ -714,9 +798,10 @@
             footerView.maxValue         = _maxValue;
             [cell.contentView addSubview:footerView];
         }
-        
         return cell;
+        
     }else{
+        
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"custemCell" forIndexPath:indexPath];
         DYRulerView *rulerView = [cell.contentView viewWithTag:1002];
         if (!rulerView){
@@ -729,7 +814,6 @@
             [cell.contentView addSubview:rulerView];
         }
         
-        
         rulerView.backgroundColor   =  [UIColor whiteColor];
         rulerView.minValue = (int)(_step*(indexPath.item-1)*_betweenNum+_minValue);
         rulerView.maxValue = (int)(_step*indexPath.item*_betweenNum);
@@ -737,13 +821,12 @@
         rulerView.baseMinValue = _minValue;
         rulerView.betweenNumber = _betweenNum;
         rulerView.defaultValue = (int)(_defaultValue);
+        rulerView.exponent = _exponent;
+        
         rulerView.markerColor = _markerColor;
         rulerView.isTime = _isTime;
         rulerView.row               = indexPath.item-1;
         rulerView.totalRows         = _stepNum;
-        
-        
-        
         [rulerView setNeedsDisplay];
         
         return cell;
@@ -760,9 +843,11 @@
         return CGSizeMake(RulerGap*_betweenNum, CollectionHeight);
     }
 }
+
 -(UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section{
     return UIEdgeInsetsMake(0, 0, 0, 0);
 }
+
 - (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section{
     return 0.f;
 }
@@ -815,9 +900,9 @@
     int value = scrollView.contentOffset.x/RulerGap;
     int totalValue = value*_step +_minValue;
     [self playAudio];
-    if(totalValue >= _minValue){
-        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:)]) {
-            [self.delegate dyScrollRulerView:self valueChange:totalValue];
+    if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
+        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent:)]) {
+            [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent];
         }
         
     }
@@ -847,16 +932,50 @@
                 
             }
         }else{
+            
+            if(_exponent > 0){
+                
+                _exponentFloatValue = [self calculateExponentValue:_exponent];
+                
+            }else{
+                _exponentFloatValue = 1;
+            }
+            
             if (totalValue >= _maxValue) {
-                _valueLab.text = [NSString stringWithFormat:@"%d",_maxValue];
+                if(_exponent > 0){
+                    NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
+                    _valueLab.text = [NSString stringWithFormat:formatStr,_maxValue * _exponentFloatValue];
+                }else{
+                    _valueLab.text = [NSString stringWithFormat:@"%d",_maxValue];
+                }
+                
             }else if(totalValue <= _minValue){
                 if(_minValue == 0) {
                     _valueLab.text = @"0";
                 } else {
-                    _valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
+                    
+                    if(_exponent > 0){
+                        NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
+                        
+                        _valueLab.text = [NSString stringWithFormat:formatStr,_minValue * _exponentFloatValue];
+                    }else{
+                        _valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
+                    }
+                    
+                    
+                    
                 }
             }else{
-                _valueLab.text = [NSString stringWithFormat:@"%d",(value*_step) +_minValue];
+                if(_exponent > 0){
+                    NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
+                    
+                    _valueLab.text = [NSString stringWithFormat:formatStr,(value*_step) * _exponentFloatValue +_minValue];
+                }else{
+                    
+                    _valueLab.text = [NSString stringWithFormat:@"%d",(value*_step)  +_minValue];
+                }
+                
+                
             }
         }
     }else{

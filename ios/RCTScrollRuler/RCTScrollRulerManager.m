@@ -29,6 +29,8 @@ RCT_EXPORT_VIEW_PROPERTY(minValue, int);
 
 RCT_EXPORT_VIEW_PROPERTY(maxValue, int);
 
+RCT_EXPORT_VIEW_PROPERTY(exponent, int);
+
 RCT_EXPORT_VIEW_PROPERTY(step, float);
 
 RCT_EXPORT_VIEW_PROPERTY(defaultValue, int);
@@ -50,7 +52,7 @@ RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
 {
     
     CGFloat rullerHeight = [RCTScrollRuler rulerViewHeight];
-    _noneZeroRullerView = [[RCTScrollRuler alloc]initWithFrame:CGRectMake(10, 0, ScreenWidth-20, rullerHeight) theMinValue:0 theMaxValue:0 defaultValue:5 theStep:1.0 theNum:10 theUnit:@"" isTime:false markerColor:@"#ff8d2a" markerTextColor:@"#ffffff"];
+    _noneZeroRullerView = [[RCTScrollRuler alloc]initWithFrame:CGRectMake(10, 0, ScreenWidth-20, rullerHeight) theMinValue:0 theMaxValue:0 exponent:0 defaultValue:5 theStep:1.0 theNum:10 theUnit:@"" isTime:false markerColor:@"#ff8d2a" markerTextColor:@"#ffffff"];
     _noneZeroRullerView.bgColor = [UIColor whiteColor];
     _noneZeroRullerView.delegate        = self;
     _noneZeroRullerView.scrollByHand    = NO;
@@ -59,8 +61,13 @@ RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
 }
 
 #pragma RCTScrollRulerDelegate
--(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value{
-     rulerView.onSelect(@{@"value": @((int)value)});
+-(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value exponent:(int)exponent{
+    if(exponent > 0){
+        //rulerView.onSelect(@{@"value": @((float)value)});
+    }else{
+        //rulerView.onSelect(@{@"value": @((int)value)});
+    }
+    //     rulerView.onSelect(@{@"value": @((int)value)});
 }
 
 @end

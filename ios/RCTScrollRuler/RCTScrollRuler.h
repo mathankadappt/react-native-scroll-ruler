@@ -17,7 +17,7 @@
  *  滑动视图
  *  当前滑动的值
  */
--(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value;
+-(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value exponent:(int)exponent;
 
 @end
 @interface RCTScrollRuler : UIView
@@ -34,7 +34,7 @@
 //背景颜色
 @property(nonatomic,strong)UIColor *bgColor;
 
--(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)hexColor markerTextColor:(NSString*)hexColor;
+-(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue exponent:(int)exponent defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)hexColor markerTextColor:(NSString*)hexColor;
 
 -(void)setRealValue:(float)realValue animated:(BOOL)animated;
 
