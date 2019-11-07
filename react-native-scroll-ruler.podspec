@@ -13,7 +13,8 @@ Pod::Spec.new do |s|
   s.platform     = :ios, "9.0"
 
   s.source       = { :git => "https://github.com/mathankadappt/react-native-scroll-ruler.git", :tag => "v#{s.version}" }
-  s.source_files  = "ios/**/*.{h,m,mp3}"
+  s.source_files  = "ios/**/*.{h,m}"
+  s.resources      = "ios/RCTScrollRuler/resource/*"
 
   s.dependency 'React'
 end
