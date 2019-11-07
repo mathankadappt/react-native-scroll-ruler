@@ -898,13 +898,18 @@
 #pragma mark -UIScrollViewDelegate
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
+    NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
     int totalValue = value*_step +_minValue;
     [self playAudio];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
-        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent:)]) {
-            [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+            [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+            
         }
-        
+    }else{
+        if(totalValue > _maxValue){
+            [scrollView setContentOffset:CGPointMake((_maxValue - _minValue) * RulerGap / _step, 0) animated:NO];
+        }
     }
     _scrollByHand = YES;
     if (_scrollByHand) {
@@ -934,9 +939,7 @@
         }else{
             
             if(_exponent > 0){
-                
                 _exponentFloatValue = [self calculateExponentValue:_exponent];
-                
             }else{
                 _exponentFloatValue = 1;
             }
@@ -961,21 +964,17 @@
                     }else{
                         _valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
                     }
-                    
-                    
-                    
                 }
             }else{
                 if(_exponent > 0){
                     NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
                     
-                    _valueLab.text = [NSString stringWithFormat:formatStr,(value*_step) * _exponentFloatValue +_minValue];
+                    // _valueLab.text = [NSString stringWithFormat:formatStr,(value*_step) * _exponentFloatValue +_minValue];
+                    _valueLab.text = [NSString stringWithFormat:formatStr,(value*_step) * _exponentFloatValue + _minValue * _exponentFloatValue];
                 }else{
                     
                     _valueLab.text = [NSString stringWithFormat:@"%d",(value*_step)  +_minValue];
                 }
-                
-                
             }
         }
     }else{
@@ -992,6 +991,10 @@
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
     [self setRealValue:round(value) animated:YES];
+}
+
+-(BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView{
+    return false;
 }
 
 @end

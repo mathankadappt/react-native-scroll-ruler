@@ -17,7 +17,7 @@
  *  滑动视图
  *  当前滑动的值
  */
--(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value exponent:(int)exponent;
+-(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value exponent:(int)exponent exponentFValue:(float)exponentFloatValue;
 
 @end
 @interface RCTScrollRuler : UIView

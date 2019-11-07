@@ -45,7 +45,6 @@ RCT_EXPORT_VIEW_PROPERTY(markerTextColor, NSString);
 
 RCT_EXPORT_VIEW_PROPERTY(isTime, BOOL);
 
-
 RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
 
 - (UIView *)view
@@ -61,13 +60,23 @@ RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
 }
 
 #pragma RCTScrollRulerDelegate
--(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value exponent:(int)exponent{
-    if(exponent > 0){
-        //rulerView.onSelect(@{@"value": @((float)value)});
-    }else{
-        //rulerView.onSelect(@{@"value": @((int)value)});
+-(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value exponent:(int)exponent exponentFValue:(float)exponentFloatValue{
+    if(rulerView.onSelect){
+        if(exponent > 0){
+            NSLog(@"TEMP %f",(float)value * exponentFloatValue);
+            NSLog(@"VAL %f",value);
+            NSLog(@"EXP %f", 1/exponentFloatValue);
+            NSLog(@"EXP VAL %f", exponentFloatValue);
+            
+            NSString *formatStr = exponent == 1 ? @"%.1f" : (exponent == 2 ? @"%.2f" : exponent == 3 ? @"%.3f" : exponent == 4 ? @"%.4f" : @"");
+            NSString *valueStr = [NSString stringWithFormat:formatStr,value * exponentFloatValue];
+            NSLog(@"%f",[valueStr floatValue]);
+            // rulerView
+            rulerView.onSelect(@{@"value": @([valueStr floatValue])});
+        }else{
+            rulerView.onSelect(@{@"value": @((int)value)});
+        }
     }
-    //     rulerView.onSelect(@{@"value": @((int)value)});
 }
 
 @end
