@@ -153,7 +153,7 @@
                 //NSString *num = [NSString stringWithFormat:@"%d:%d", minutes, seconds];
                 // NSLog(@"Num: %@, Step : %f, Min : %d, i: %d ",num, _step, _minValue, i );
                 if ([num isEqualToString:@"0"]||[num isEqualToString:@"0:00"]) {
-                    num = @"0";
+                    num = @"0:00";
                 }
                 
                 
@@ -170,10 +170,14 @@
                 else if(self.row == self.totalRows-1 && i > 0 ){
                     predictedX = (startX+lineCenterX*i-width/2)-width/2;
                 }
-                [num drawInRect:CGRectMake(predictedX, longLineY-14, width, 16) withAttributes:attribute];
+                [num drawInRect:CGRectMake(predictedX, longLineY-14, width+2, 16) withAttributes:attribute];
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [UIColor lightGrayColor].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
+            }else if(tempInt%(5) == 0){
+                CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
+                CGContextAddLineToPoint(context, startX+lineCenterX*i, mediumLineY);
+                
             }else{
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
             }
@@ -883,19 +887,19 @@
     }
 }
 
-- (void)playSound :(NSString *)fName :(NSString *) ext{
-    SystemSoundID audioEffect;
-    NSString *path = [[NSBundle mainBundle] pathForResource : fName ofType :ext];
-    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
-        NSURL *pathURL = [NSURL fileURLWithPath: path];
-        AudioServicesCreateSystemSoundID((__bridge CFURLRef) pathURL, &_pewPewSound);
-        //AudioServicesCreateSystemSoundID(audioEffect);
-        //AudioServicesCreateSystemSoundID(<#CFURLRef  _Nonnull inFileURL#>, <#SystemSoundID * _Nonnull outSystemSoundID#>)
-    }
-    else {
-        NSLog(@"error, file not found: %@", path);
-    }
-}
+//- (void)playSound :(NSString *)fName :(NSString *) ext{
+//    SystemSoundID audioEffect;
+//    NSString *path = [[NSBundle mainBundle] pathForResource : fName ofType :ext];
+//    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
+//        NSURL *pathURL = [NSURL fileURLWithPath: path];
+//        AudioServicesCreateSystemSoundID((__bridge CFURLRef) pathURL, &_pewPewSound);
+//        //AudioServicesCreateSystemSoundID(audioEffect);
+//        //AudioServicesCreateSystemSoundID(<#CFURLRef  _Nonnull inFileURL#>, <#SystemSoundID * _Nonnull outSystemSoundID#>)
+//    }
+//    else {
+//        NSLog(@"error, file not found: %@", path);
+//    }
+//}
 
 
 #pragma mark -UIScrollViewDelegate
@@ -903,7 +907,7 @@
     int value = scrollView.contentOffset.x/RulerGap;
     NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
     int totalValue = value*_step +_minValue;
-     [self playAudio:totalValue];
+    [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
             [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
@@ -933,8 +937,8 @@
                 }
             }else{
                 
-                int minutes =  floor(value / 60);
-                int seconds = value - minutes * 60;
+                int minutes =  floor((value + _minValue)/ 60);
+                int seconds = (value + _minValue) - minutes * 60;
                 NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
                 _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
                 
