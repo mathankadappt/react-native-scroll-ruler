@@ -348,6 +348,9 @@
 @property(nonatomic, assign)NSString *markerColor;
 @property(nonatomic, assign)NSString *markerTextColor;
 @property (assign) SystemSoundID pewPewSound;
+@property(nonatomic, assign)int previousRealValue;
+@property (nonatomic, strong)AVAudioPlayer *audioPlayer;
+
 @end
 @implementation RCTScrollRuler
 
@@ -573,6 +576,7 @@
     }
     return 0.1;
 }
+
 
 -(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue exponent:(int)exponent defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor {
     
@@ -857,27 +861,26 @@
 
 #pragma mark play sound
 
-- (void)playAudio {
-    
-    //[self playSound:@"background-music-aac" :@"caf"];
-    //    NSString *path = [[NSBundle mainBundle] pathForResource : @"tickering" ofType :@"mp3"];
-    //    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
-    //        NSURL *pathURL = [NSURL fileURLWithPath: path];
-    //        AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithContentsOfURL:pathURL error:nil];
-    //        player.numberOfLoops = -1; //Infinite
-    //
-    //        [player play];
-    //    }
-    
-    //NSString *soundFilePath = [NSString stringWithFormat:@"%@/test.m4a",[[NSBundle mainBundle] resourcePath]];
-    //NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
-    
-    
-    
-}
+
 
 - (void)playSystemSound {
     AudioServicesPlaySystemSound(self.pewPewSound);
+}
+-(void)playAudio:(int)realValue{
+    if (self.previousRealValue != realValue){
+        self.previousRealValue = realValue;
+        NSString *soundFilePath = [NSString stringWithFormat:@"%@/tickering.mp3",[[NSBundle mainBundle] resourcePath]];
+        NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
+        
+        if (self.audioPlayer == nil){
+            self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:soundFileURL error:nil];
+        }
+        //    player.numberOfLoops = -1; //Infinite
+        
+        [self.audioPlayer play];
+    }else{
+        NSLog(@"already there!");
+    }
 }
 
 - (void)playSound :(NSString *)fName :(NSString *) ext{
@@ -900,7 +903,7 @@
     int value = scrollView.contentOffset.x/RulerGap;
     NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
     int totalValue = value*_step +_minValue;
-    [self playAudio];
+     [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
             [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
