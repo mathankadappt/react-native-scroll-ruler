@@ -318,7 +318,7 @@
     
     CGContextMoveToPoint(context, 0, 0);//起始点
     NSString *num = [NSString stringWithFormat:@"%d",_maxValue];
-    NSLog(@"%@",num);
+    //NSLog(@"%@",num);
     NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont,NSForegroundColorAttributeName:[UIColor lightGrayColor]};
     CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
     [num drawInRect:CGRectMake(0-width/2, longLineY+10, width, 16) withAttributes:attribute];
@@ -379,7 +379,7 @@
 }
 
 - (void)setMaxValue:(int)maxValue {
-    NSLog(@"设置最大值");
+    
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _maxValue = maxValue;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum+1;
@@ -399,7 +399,7 @@
 }
 
 - (void)setIsTime:(BOOL)isTime {
-    NSLog(@"设置最大值");
+    
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _isTime = isTime;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
@@ -474,7 +474,7 @@
 }
 
 - (void)setStep:(float)step {
-    NSLog(@"设置步长");
+    
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _step = step;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
@@ -494,23 +494,23 @@
 }
 
 - (void)setDefaultValue:(int)defaultValue {
-    NSLog(@"设置默认值");
+    
     _defaultValue      = defaultValue;
     if (_maxValue != 0) {
         [self setRealValue:defaultValue];
         [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
     }
-    NSLog(@"setDefaultValue被调用了，defaultValue=%.2f", defaultValue);
+    //NSLog(@"setDefaultValue被调用了，defaultValue=%.2f", defaultValue);
 }
 
 - (void)setExponentValue:(int)exponent {
-    NSLog(@"设置默认值");
+    //NSLog(@"设置默认值");
     _exponent      = exponent;
 }
 
 
 - (void)setNum:(float)num {
-    NSLog(@"设置间隔");
+    //NSLog(@"设置间隔");
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _num = num;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
@@ -544,7 +544,7 @@
 }
 
 - (void)setUnit:(NSString *)unit {
-    NSLog(@"设置单位");
+    //NSLog(@"设置单位");
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _unit = unit;
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
@@ -565,7 +565,7 @@
 
 -(float)calculateExponentValue:(int)exp{
     
-    NSLog(@"%f",pow(10, exp));
+    //NSLog(@"%f",pow(10, exp));
     //return 1/pow(10, exp);
     if(exp == 1){
         return 0.1;
@@ -847,7 +847,7 @@
         
         return CGSizeMake(self.frame.size.width/2, CollectionHeight);
     }else{
-        NSLog(@"LARGE LINE");
+        //NSLog(@"LARGE LINE");
         return CGSizeMake(RulerGap*_betweenNum, CollectionHeight);
     }
 }
@@ -883,29 +883,15 @@
         
         [self.audioPlayer play];
     }else{
-        NSLog(@"already there!");
+        //NSLog(@"already there!");
     }
 }
-
-//- (void)playSound :(NSString *)fName :(NSString *) ext{
-//    SystemSoundID audioEffect;
-//    NSString *path = [[NSBundle mainBundle] pathForResource : fName ofType :ext];
-//    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
-//        NSURL *pathURL = [NSURL fileURLWithPath: path];
-//        AudioServicesCreateSystemSoundID((__bridge CFURLRef) pathURL, &_pewPewSound);
-//        //AudioServicesCreateSystemSoundID(audioEffect);
-//        //AudioServicesCreateSystemSoundID(<#CFURLRef  _Nonnull inFileURL#>, <#SystemSoundID * _Nonnull outSystemSoundID#>)
-//    }
-//    else {
-//        NSLog(@"error, file not found: %@", path);
-//    }
-//}
 
 
 #pragma mark -UIScrollViewDelegate
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
-    NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
+    //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
     int totalValue = value*_step +_minValue;
     [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){

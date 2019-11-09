@@ -63,14 +63,14 @@ RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
 -(void)dyScrollRulerView:(RCTScrollRuler *)rulerView valueChange:(float)value exponent:(int)exponent exponentFValue:(float)exponentFloatValue{
     if(rulerView.onSelect){
         if(exponent > 0){
-            NSLog(@"TEMP %f",(float)value * exponentFloatValue);
-            NSLog(@"VAL %f",value);
-            NSLog(@"EXP %f", 1/exponentFloatValue);
-            NSLog(@"EXP VAL %f", exponentFloatValue);
+//            NSLog(@"TEMP %f",(float)value * exponentFloatValue);
+//            NSLog(@"VAL %f",value);
+//            NSLog(@"EXP %f", 1/exponentFloatValue);
+//            NSLog(@"EXP VAL %f", exponentFloatValue);
             
             NSString *formatStr = exponent == 1 ? @"%.1f" : (exponent == 2 ? @"%.2f" : exponent == 3 ? @"%.3f" : exponent == 4 ? @"%.4f" : @"");
             NSString *valueStr = [NSString stringWithFormat:formatStr,value * exponentFloatValue];
-            NSLog(@"%f",[valueStr floatValue]);
+            //NSLog(@"%f",[valueStr floatValue]);
             // rulerView
             rulerView.onSelect(@{@"value": @([valueStr floatValue])});
         }else{
