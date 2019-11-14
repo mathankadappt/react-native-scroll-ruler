@@ -36,7 +36,7 @@ import android.widget.Toast;
  * @description
  */
 
-public class RNScrollRuler extends View  {
+public class RNScrollRuler extends View {
     private static final String TAG = "RulerView";
     /**
      * 2个大刻度之间间距，默认为1
@@ -150,13 +150,18 @@ public class RNScrollRuler extends View  {
     /**
      * 当前刻度
      */
+
     public float currentScale = firstScale;
+
+    private int exponent = 0;
+    private float exponentFloatValue = 0;
 
     private boolean isTime = false;
 
     private ValueAnimator valueAnimator;
     private VelocityTracker velocityTracker = VelocityTracker.obtain();
     private String resultText = String.valueOf(firstScale);
+    private String cacheResultText = String.valueOf(firstScale);
     private Paint bgPaint;
     private Paint horzitalLinePaint;
     private Paint smallScalePaint;
@@ -183,26 +188,24 @@ public class RNScrollRuler extends View  {
     private int leftScroll;
     private int rightScroll;
     private int xVelocity;
-    private Rect correctAnswerRect;
     private static Context sContext;
     private Paint resultRectPaint;
 
     private String  markerTextColor = "#ffffff";
     private String markerColor  = "#ff8d2a";
-    private  int maxScaleValue  = 100;
-    MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.ticker);
 
+    private  int maxScaleValue  = 100;
+
+    MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.ticker);
     public static void setContext(Context context) {
         if (context == null) {
             throw new IllegalArgumentException("context cannot be null!");
         }
-
         // In order to avoid memory leak, you should use application context rather than the `activiy`
         context = context.getApplicationContext();
         if (context == null) {
             throw new IllegalArgumentException("context cannot be null!");
         }
-
         sContext = context;
     }
 
@@ -295,8 +298,10 @@ public class RNScrollRuler extends View  {
         lagScalePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         scaleNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         resultNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
         kgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        
+
 
         bgPaint.setColor(bgColor);
         horzitalLinePaint.setColor(smallScaleColor);
@@ -306,12 +311,10 @@ public class RNScrollRuler extends View  {
         scaleNumPaint.setColor(getResources().getColor(R.color.num_color));
         resultNumPaint.setColor(resultNumColor);
         resultNumPaint.setFakeBoldText(true);
-
         kgPaint.setColor(unitColor);
         kgPaint.setFakeBoldText(true);
 
         resultNumPaint.setStyle(Paint.Style.FILL);
-
         kgPaint.setStyle(Paint.Style.FILL);
         bgPaint.setStyle(Paint.Style.FILL);
         horzitalLinePaint.setStyle(Paint.Style.FILL);
@@ -329,28 +332,23 @@ public class RNScrollRuler extends View  {
         horzitalLinePaint.setStrokeWidth(largeScaleStroke);
 
         resultNumPaint.setTextSize(resultNumTextSize);
-
         kgPaint.setTextSize(unitTextSize);
         scaleNumPaint.setTextSize(scaleNumTextSize);
 
         bgRect = new RectF();
         resultNumRect = new Rect();
-        correctAnswerRect = new Rect();
-
         scaleNumRect = new Rect();
         kgRect = new Rect();
 
         resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
-
-
         kgPaint.getTextBounds(resultText, 0, 1, kgRect);
 
         smallScaleHeight = rulerHeight / 4;
         midScaleHeight = rulerHeight / 2;
         lagScaleHeight = rulerHeight / 2 + 5;
         valueAnimator = new ValueAnimator();
-    }
 
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -380,7 +378,6 @@ public class RNScrollRuler extends View  {
         drawBg(canvas);
         drawScaleAndNum(canvas);
         drawResultText(canvas, resultText);
-        //drawCorrectAnswer(canvas ,  String.valueOf((int) 20));
     }
 
     @Override
@@ -391,7 +388,6 @@ public class RNScrollRuler extends View  {
         velocityTracker.addMovement(event);
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                // this.playSound();
                 //按下时如果属性动画还没执行完,就终止,记录下当前按下点的位置
                 if (valueAnimator != null && valueAnimator.isRunning()) {
                     valueAnimator.end();
@@ -400,9 +396,16 @@ public class RNScrollRuler extends View  {
                 downX = event.getX();
                 break;
             case MotionEvent.ACTION_MOVE:
-                //滑动时候,通过假设的滑动距离,做超出左边界以及右边界的限制。
-                mp.start();
 
+                 if(!cacheResultText.equalsIgnoreCase(resultText)) {
+                    mp.start();
+                    cacheResultText = resultText;
+                }
+                else {
+                    mp.pause();
+                }
+
+                //滑动时候,通过假设的滑动距离,做超出左边界以及右边界的限制。
                 moveX = currentX - downX + lastMoveX;
                 if (moveX >= width / 2) {
                     moveX = width / 2;
@@ -411,8 +414,8 @@ public class RNScrollRuler extends View  {
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                //手指抬起时候制造惯性滑动
                 mp.pause();
+                //手指抬起时候制造惯性滑动
                 lastMoveX = moveX;
                 xVelocity = (int) velocityTracker.getXVelocity();
                 autoVelocityScroll(xVelocity);
@@ -463,7 +466,7 @@ public class RNScrollRuler extends View  {
         return width / 2 - scaleGap * scaleCount * (scale - minScale);
     }
 
-    private String transformSecondsToMinutes (float timeInSec ){
+ private String transformSecondsToMinutes (float timeInSec ){
         double minutes = Math.floor(timeInSec / 60);
         double seconds = timeInSec - minutes * 60;
         int min = (int) minutes;
@@ -476,9 +479,7 @@ public class RNScrollRuler extends View  {
         canvas.translate(0, (showScaleResult ? resultNumRect.height() : 0) + rulerToResultgap);//移动画布到结果值的下面
 
         // 先画横线
-
-        // REMOVED BOTTOM LINE
-        //canvas.drawLine(0, midScaleHeight, width, midScaleHeight, horzitalLinePaint);
+        //canvas.drawLine(0, 0, width, 0, horzitalLinePaint);
 
         int num1;//确定刻度位置
         float num2;
@@ -565,8 +566,18 @@ public class RNScrollRuler extends View  {
 
         //这里是滑动时候不断回调给使用者的结果值
         currentScale = new WeakReference<>(new BigDecimal(((width / 2 - moveX) / (scaleGap * scaleCount) + minScale) * scaleLimit)).get().setScale(0, BigDecimal.ROUND_HALF_UP).intValue();
-
         resultText = String.valueOf((int) currentScale);
+        if(exponent > 0){
+            exponentFloatValue = this.calculateExponentValue(exponent);
+
+        }else{
+            exponentFloatValue = 1;
+        }
+        if(exponent > 0){
+            String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
+            resultText = String.format(formatStr,(float)currentScale * exponentFloatValue);
+
+        }
 
         if (onChooseResulterListener != null) {
             onChooseResulterListener.onScrollResult(resultText); //接口不断回调给使用者结果值
@@ -578,43 +589,39 @@ public class RNScrollRuler extends View  {
                     //当滑动出范围的话，不绘制，去除左右边界
                 } else {
                     //绘制刻度，绘制刻度数字
-
+                    //canvas.drawLine(0, 0, 0, midScaleHeight, midScalePaint);
+                    canvas.drawLine(0, 25, 0, midScaleHeight+48, midScalePaint);
                     if (num1 == 0 && minScale == 0) {
-                        canvas.drawLine(0, 25, 0, midScaleHeight+48, midScalePaint);
-                        scaleNumPaint.getTextBounds("0", 0, "0".length(), scaleNumRect);
-                        canvas.drawText("0",  -scaleNumRect.width() / 2 , -resultNumRect.height() + 40, scaleNumPaint);
-                    } else  {
-
+                        scaleNumPaint.getTextBounds("不设", 0, "不设".length(), scaleNumRect);
+                        canvas.drawText(num1+"", -scaleNumRect.width() / 2, -resultNumRect.height()+ 40, scaleNumPaint);
+                        //canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
+                    } else {
+                        scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
                         int rulerValue = (num1 / scaleCount + minScale) * scaleLimit;
-                        if(rulerValue >  maxScaleValue  ){
-
-                        }else{
-                            canvas.drawLine(0, 25, 0, midScaleHeight+48, midScalePaint);
-                            scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
-
-                            // checking time paramter and drawing the scale value
-                            if(this.isTime){
+                        String finalValue = ""+rulerValue;
+                         if(this.isTime){
                                 String newFormatedValue =  this.transformSecondsToMinutes(rulerValue);
                                 // reposition the scale value
                                 canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                             }else{
                                 // reposition the scale vlaue
-                                canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
-                                /**
-                                 * Code for making color change of current scale
-                                 Log.i("CREATE FILE", "currentScale "+(int) currentScale + "resultText "+ resultText);
-                                 String compareResultText  =  String.valueOf((int) currentScale);
-                                 if( resultText.equals(compareResultText)){
-                                 scaleNumPaint.setColor(getResources().getColor(R.color.result_text_color));
-                                 canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height() - rulerToResultgap / 6, scaleNumPaint);
-                                 }else{
-                                 canvas.drawText( (num1 / scaleCount + minScale) * scaleLimit + "", (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height() - rulerToResultgap / 6, scaleNumPaint);
-                                 }
-                                 */
-                            }
-                        }
+                             if(exponent > 0){
+                                 exponentFloatValue = this.calculateExponentValue(exponent);
 
+                             }else{
+                                 exponentFloatValue = 1;
+                             }
+                             if(exponent > 0){
+                                 String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
+                                 finalValue = String.format(formatStr,(float)rulerValue * exponentFloatValue);
+
+                             }
+                               canvas.drawText(finalValue, -scaleNumRect.width() / 2- 18, -resultNumRect.height()+ 40, scaleNumPaint);
+                            }
+                        
+                       
                     }
+
                 }
 
             } else {   //绘制小数刻度
@@ -626,49 +633,15 @@ public class RNScrollRuler extends View  {
                 }
             }
             ++num1;  //刻度加1
-            //Toast.makeText(sContext, "num1: "+ num1, Toast.LENGTH_SHORT).show();
             rulerRight += scaleGap;  //绘制屏幕的距离在原有基础上+1个刻度间距
             canvas.translate(scaleGap, 0); //移动画布到下一个刻度
         }
 
         canvas.restore();
         //绘制屏幕中间用来选中刻度的最大刻度
-
-        // reposition the bottom line and color
-        //lagScalePaint.setColor(getResources().getColor(R.color.result_text_color));
-        lagScalePaint.setColor(Color.parseColor(this.markerColor));
+        //canvas.drawLine(width / 2, 0, width / 2, lagScaleHeight, lagScalePaint);
         canvas.drawLine(width / 2, resultNumRect.height()- 180, width / 2, midScaleHeight+48 , lagScalePaint);
-
     }
-
-//    //绘制上面的结果 结果值+单位
-//    private void drawResultText(Canvas canvas, String resultText) {
-//        if (!showScaleResult) {   //判断用户是否设置需要显示当前刻度值，如果否则取消绘制
-//            return;
-//        }
-//        canvas.translate(0, -resultNumRect.height() - rulerToResultgap / 2);  //移动画布到正确的位置来绘制结果值
-//        if (resultText.equals("0")) {
-//            resultText = "0";
-//            resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
-//            resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
-//            canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height()- 100,  resultNumPaint); //绘制当前刻度结果值
-//            resultNumPaint.setColor(getResources().getColor(R.color.result_text_color));
-//        } else {
-//            resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
-//            resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
-//            resultNumPaint.setColor(getResources().getColor(R.color.result_text_color));
-//            if(this.isTime){
-//                String newFormatedValue =  this.transformSecondsToMinutes( Integer.valueOf(resultText) );
-//                canvas.drawText(newFormatedValue, width / 2 - resultNumRect.width() / 2, resultNumRect.height() - 100, //绘制当前刻度结果值
-//                        resultNumPaint);
-//            }else{
-//                canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height()- 100,resultNumPaint); //绘制当前刻度结果值
-//            }
-//            resultNumRight = width / 2 + resultNumRect.width() / 2 + 5;
-//
-//            canvas.drawText(unit, resultNumRight, kgRect.height() + 8, kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
-//        }
-//    }
 
     public void drawTriangle(Canvas canvas, Paint paint, int x, int y, int width) {
         int halfWidth = width / 2;
@@ -688,18 +661,18 @@ public class RNScrollRuler extends View  {
         canvas.drawPath(path, paint);
     }
 
+
+    //绘制上面的结果 结果值+单位
     private void drawResultText(Canvas canvas, String resultText) {
         if (!showScaleResult) {   //判断用户是否设置需要显示当前刻度值，如果否则取消绘制
             return;
         }
         canvas.translate(0, -resultNumRect.height() - rulerToResultgap / 2);  //移动画布到正确的位置来绘制结果值
-
         //CHANGES
         resultRectPaint = new Paint();
         resultRectPaint.setStyle(Paint.Style.FILL);
         //resultRectPaint.setColor(getResources().getColor(R.color.num_color));
         resultRectPaint.setColor(Color.parseColor(this.markerColor));
-
         resultRectPaint.setStrokeWidth(4);
         Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
         canvas.drawRect(rectangle, resultRectPaint);
@@ -741,14 +714,10 @@ public class RNScrollRuler extends View  {
         }
     }
 
-
-
     private void drawBg(Canvas canvas) {
-        bgRect.set(0, 0, width, height-20);
-        //bgRect.set(0, 0, width, height - 60);
-        //bgPaint.setColor(getResources().getColor(R.color.yellow));
+        bgRect.set(0, 0, width, height);
         if (isBgRoundRect) {
-            canvas.drawRoundRect(bgRect, 50, 50, bgPaint); //20->椭圆的用于圆形角x-radius
+            canvas.drawRoundRect(bgRect, 20, 20, bgPaint); //20->椭圆的用于圆形角x-radius
         } else {
             canvas.drawRect(bgRect, bgPaint);
         }
@@ -802,7 +771,6 @@ public class RNScrollRuler extends View  {
     }
 
     public void setMaxScale(int maxScale) {
-        this.maxScaleValue  = maxScale;
         this.maxScale = maxScale / scaleLimit;
         invalidate();
     }
@@ -885,7 +853,6 @@ public class RNScrollRuler extends View  {
         this.unitColor = unitColor;
         invalidate();
     }
-
     public void checkIsTime(boolean isTime) {
         this.isTime = isTime;
         invalidate();
@@ -900,4 +867,25 @@ public class RNScrollRuler extends View  {
         this.markerColor = markerColor;
         invalidate();
     }
+    public void setExponent(int exponent) {
+        this.exponent = exponent;
+        invalidate();
+    }
+
+    public float calculateExponentValue(int exp){
+
+        if(exp == 1){
+            return 0.1f;
+        }else if (exp == 2){
+            return 0.01f;
+        }else if (exp == 3){
+            return 0.001f;
+        }else if (exp == 4){
+            return 0.0001f;
+        }else if (exp == 5){
+            return 0.00001f;
+        }
+        return 0.1f;
+    }
+
 }

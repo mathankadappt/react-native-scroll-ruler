@@ -40,9 +40,7 @@ public class RNScrollRulerManager extends SimpleViewManager {
 
             @Override
             public void onScrollResult(String result) {
-                // WritableMap event = Arguments.createMap();
-                // event.putString("value", result);
-                // reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(ruler.getId(), "topSelect", event);
+
             }
         });
         return ruler;
@@ -78,7 +76,7 @@ public class RNScrollRulerManager extends SimpleViewManager {
         ruler.setScaleCount(num);
     }
 
-    @ReactProp(name = "isTime")
+     @ReactProp(name = "isTime")
     public void checkIsTime(RNScrollRuler ruler, @Nullable boolean isTime) {
         ruler.checkIsTime(isTime);
     }
@@ -91,6 +89,10 @@ public class RNScrollRulerManager extends SimpleViewManager {
     @ReactProp(name = "markerColor")
     public void setMarkerColor(RNScrollRuler ruler, @Nullable String markerColor) {
         ruler.setMarkerColor(markerColor);
+    }
+    @ReactProp(name = "exponent")
+    public void setExponent(RNScrollRuler ruler, @Nullable int exponent) {
+        ruler.setExponent(exponent);
     }
 
 }
