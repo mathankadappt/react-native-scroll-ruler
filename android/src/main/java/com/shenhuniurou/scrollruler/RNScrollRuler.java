@@ -422,6 +422,11 @@ public class RNScrollRuler extends View {
                 xVelocity = (int) velocityTracker.getXVelocity();
                 autoVelocityScroll(xVelocity);
                 velocityTracker.clear();
+                Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
+                if (rectangle.contains((int)event.getX(),(int)event.getY()))
+                {
+                    mp.start();
+                }
                 break;
         }
         invalidate();
@@ -468,6 +473,10 @@ public class RNScrollRuler extends View {
         float value = width / 2 - scaleGap * scaleCount ;//* (scale - minScale);
         return  value;
     }
+    private float getWhichScalMovexFull(float scale) {
+        float value = width / 2 - (scaleGap *  (scale - minScale));
+        return  value;
+    }
 
  private String transformSecondsToMinutes (float timeInSec ){
         double minutes = Math.floor(timeInSec / 60);
@@ -488,7 +497,7 @@ public class RNScrollRuler extends View {
         float num2;
 
         if (firstScale != -1) {   //第一次进来的时候计算出默认刻度对应的假设滑动的距离moveX
-            moveX = getWhichScalMovex(firstScale);          //如果设置了默认滑动位置，计算出需要滑动的距离
+            moveX = getWhichScalMovexFull(firstScale);          //如果设置了默认滑动位置，计算出需要滑动的距离
             lastMoveX = moveX;
             firstScale = -1;                                //将结果置为-1，下次不再计算初始位置
         }
@@ -760,6 +769,8 @@ public class RNScrollRuler extends View {
     public void setScaleCount(int scaleCount) {
         //this.scaleCount = scaleCount;
         //invalidate();
+        moveX = width/2 + (scaleGap * (firstScale-minScale));
+        invalidate();
     }
 
     public void  recalculate()
