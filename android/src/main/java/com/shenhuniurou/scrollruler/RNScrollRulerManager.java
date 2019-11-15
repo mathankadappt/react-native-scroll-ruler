@@ -68,7 +68,7 @@ public class RNScrollRulerManager extends SimpleViewManager {
 
     @ReactProp(name = "step")
     public void setStep(RNScrollRuler ruler, @Nullable float step) {
-        ruler.setScaleLimit((int)(step * 10));
+        ruler.setScaleLimit((int)(step ));
     }
 
     @ReactProp(name = "num")
