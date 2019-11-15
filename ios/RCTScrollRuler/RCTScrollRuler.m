@@ -612,6 +612,20 @@
     return self;
 }
 
+//The event handling method
+- (void)handleSingleTap:(UITapGestureRecognizer *)recognizer
+{
+    NSString *soundFilePath = [NSString stringWithFormat:@"%@/tickering.mp3",[[NSBundle mainBundle] resourcePath]];
+    NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
+    
+    if (self.audioPlayer == nil){
+        self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:soundFileURL error:nil];
+    }
+    //    player.numberOfLoops = -1; //Infinite
+    
+    [self.audioPlayer play];
+}
+
 -(UIView *)grayLine {
     if (!_grayLine) {
         _grayLine = [[UIView alloc]initWithFrame:CGRectMake(0, CGRectGetMaxY(_valueLab.frame), self.bounds.size.width, 1)];
@@ -664,6 +678,11 @@
         _triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
         _triangle.tintColor = [RCTScrollRuler colorFromHexString:_markerColor];
         _triangle.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
+        
+        UITapGestureRecognizer *singleFingerTap =
+        [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                action:@selector(handleSingleTap:)];
+        [self addGestureRecognizer:singleFingerTap];
         //[self addTriangleTipToLayer:_valueLab.superview.layer];
         //[self addTriangleTipToLayer:_triangle.layer];
     }
