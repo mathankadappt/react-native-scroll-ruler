@@ -474,7 +474,8 @@ public class RNScrollRuler extends View {
         return  value;
     }
     private float getWhichScalMovexFull(float scale) {
-        float value = width / 2 - (scaleGap *  (scale - minScale));
+        float value = width / 2 - (scaleGap *  ((scale - minScale)/scaleLimit));
+
         return  value;
     }
 
@@ -595,6 +596,7 @@ public class RNScrollRuler extends View {
         if (onChooseResulterListener != null) {
             onChooseResulterListener.onScrollResult(resultText); //接口不断回调给使用者结果值
         }
+        Log.d(TAG, "drawScaleAndNum: X: "+moveX);
         //绘制当前屏幕可见刻度,不需要裁剪屏幕,while循环只会执行·屏幕宽度/刻度宽度·次,大部分的绘制都是if(curDis<width)这样子内存暂用相对来说会比较高。。
         while (rulerRight < width) {
             int prediectedValue = (num1 * scaleLimit) + minScale;
@@ -607,7 +609,7 @@ public class RNScrollRuler extends View {
                     canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
                     if (num1 == 0 && minScale == 0) {
                         scaleNumPaint.getTextBounds("不设", 0, "不设".length(), scaleNumRect);
-                        canvas.drawText(num1 + "", -scaleNumRect.width() / 2, -resultNumRect.height() + 40, scaleNumPaint);
+                        canvas.drawText( (isTime? "0:00" : num1 + ""), -scaleNumRect.width() / 2, -resultNumRect.height() + 40, scaleNumPaint);
                         //canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                     } else {
                         scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
@@ -699,7 +701,7 @@ public class RNScrollRuler extends View {
 
         drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
         if (resultText.equals("0")) {
-            resultText = "0";
+            resultText = isTime ?"0:00":"0";
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
             resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
 
@@ -865,11 +867,13 @@ public class RNScrollRuler extends View {
     }
     private void recalcuateScaleCount(){
         scaleCount = (maxScale-minScale)/scaleLimit;
+        firstScale = firstScale < minScale ? (maxScale+minScale)/2 : firstScale;
     }
 
     public void setScaleLimit(int scaleLimit) {
         this.scaleLimit = scaleLimit;
         recalcuateScaleCount();
+        setScaleCount(10);
         invalidate();
     }
 
