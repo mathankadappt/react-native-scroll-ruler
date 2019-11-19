@@ -418,9 +418,18 @@ public class RNScrollRuler extends View {
                 {
                     mp.start();
                 }*/
+
                 break;
         }
 
+
+
+        invalidate();
+        return true;
+    }
+
+    private void  playTicks()
+    {
         if(!cacheResultText.equalsIgnoreCase(resultText)) {
             mp.start();
             cacheResultText = resultText;
@@ -428,10 +437,8 @@ public class RNScrollRuler extends View {
         else {
             mp.pause();
         }
-
-        invalidate();
-        return true;
     }
+
 
     private void autoVelocityScroll(int xVelocity) {
         //惯性滑动的代码,速率和滑动距离,以及滑动时间需要控制的很好,应该网上已经有关于这方面的算法了吧。。这里是经过N次测试调节出来的惯性滑动
@@ -454,6 +461,7 @@ public class RNScrollRuler extends View {
                     moveX = getWhichScalMovex(maxScale);
                 }
                 lastMoveX = moveX;
+
                 invalidate();
             }
 
@@ -462,6 +470,7 @@ public class RNScrollRuler extends View {
             @Override
             public void onAnimationEnd(Animator animation) {
                 isUp = true;
+
                 invalidate();
             }
         });
@@ -685,6 +694,8 @@ public class RNScrollRuler extends View {
         if (!showScaleResult) {   //判断用户是否设置需要显示当前刻度值，如果否则取消绘制
             return;
         }
+
+        playTicks();
         canvas.translate(0, -resultNumRect.height() - rulerToResultgap / 2);  //移动画布到正确的位置来绘制结果值
         //CHANGES
         resultRectPaint = new Paint();
