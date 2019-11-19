@@ -397,15 +397,6 @@ public class RNScrollRuler extends View {
                 break;
             case MotionEvent.ACTION_MOVE:
 
-                 if(!cacheResultText.equalsIgnoreCase(resultText)) {
-                    mp.start();
-                    cacheResultText = resultText;
-                }
-                else {
-                    mp.pause();
-                }
-
-
                 //滑动时候,通过假设的滑动距离,做超出左边界以及右边界的限制。
                 moveX = currentX - downX + lastMoveX;
                 if (moveX >= width / 2) {
@@ -422,13 +413,22 @@ public class RNScrollRuler extends View {
                 xVelocity = (int) velocityTracker.getXVelocity();
                 autoVelocityScroll(xVelocity);
                 velocityTracker.clear();
-                Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
+                /*Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
                 if (rectangle.contains((int)event.getX(),(int)event.getY()))
                 {
                     mp.start();
-                }
+                }*/
                 break;
         }
+
+        if(!cacheResultText.equalsIgnoreCase(resultText)) {
+            mp.start();
+            cacheResultText = resultText;
+        }
+        else {
+            mp.pause();
+        }
+
         invalidate();
         return true;
     }
