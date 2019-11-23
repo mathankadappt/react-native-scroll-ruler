@@ -694,7 +694,7 @@ public class RNScrollRuler extends View {
         if (!showScaleResult) {   //判断用户是否设置需要显示当前刻度值，如果否则取消绘制
             return;
         }
-
+        float density = getResources().getDisplayMetrics().density;
         playTicks();
         canvas.translate(0, -resultNumRect.height() - rulerToResultgap / 2);  //移动画布到正确的位置来绘制结果值
         //CHANGES
@@ -703,14 +703,18 @@ public class RNScrollRuler extends View {
         //resultRectPaint.setColor(getResources().getColor(R.color.num_color));
         resultRectPaint.setColor(Color.parseColor(this.markerColor));
         resultRectPaint.setStrokeWidth(4);
-        Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
+       // Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
+
+        Rect rectangle = new Rect(width / 2 + Math.round(58 * density), -Math.round(65.46f * density), width / 2 - Math.round(54.54f * density), resultNumRect.height()- Math.round(36.36f * density) );
         canvas.drawRect(rectangle, resultRectPaint);
 
         Paint paint = new Paint();
         //paint.setColor(getResources().getColor(R.color.result_text_color));
         paint.setColor(Color.parseColor(this.markerColor));
 
-        drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
+        drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density),  resultNumRect.height()- Math.round(36.36f * density), Math.round(54.54f * density));
+
+        //drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
         if (resultText.equals("0")) {
             resultText = isTime ?"0:00":"0";
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
@@ -731,15 +735,15 @@ public class RNScrollRuler extends View {
             // canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 120, resultNumPaint);
             if(this.isTime){
                 String newFormatedValue =  this.transformSecondsToMinutes( Integer.valueOf(resultText) );
-                canvas.drawText(newFormatedValue, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 145, resultNumPaint);
+                canvas.drawText(newFormatedValue, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - Math.round(52.727f * density), resultNumPaint);
             }else{
-                canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 145, resultNumPaint);
+                canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - Math.round(52.727f * density), resultNumPaint);
             }
 
             kgPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, unitTextSize, getResources().getDisplayMetrics()));
             kgPaint.setColor(unitColor);
             resultNumRight = width / 2 - unitTextSize;
-            canvas.drawText(unit, resultNumRight, -10, kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
+            canvas.drawText(unit, resultNumRight, -Math.round(3.363f * density), kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
         }
     }
 
