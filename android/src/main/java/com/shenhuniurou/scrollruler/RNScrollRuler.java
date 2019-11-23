@@ -882,7 +882,7 @@ public class RNScrollRuler extends View {
     }
     private void recalcuateScaleCount(){
         scaleCount = (maxScale-minScale)/scaleLimit;
-        firstScale = firstScale < minScale ? (maxScale+minScale)/2 : firstScale;
+        firstScale =  Math.round (((float) maxScale+ (float) minScale)/2);
     }
 
     public void setScaleLimit(int scaleLimit) {
