@@ -205,13 +205,20 @@
                 if(exponent > 0){
                     NSString *formatStr = exponent == 1 ? @"%.1f" : (exponent == 2 ? @"%.2f" : exponent == 3 ? @"%.3f" : exponent == 4 ? @"%.4f" : @"");
                     num = [NSString stringWithFormat:formatStr, (float)(i * (_step) + _minValue) * exponentFloatValue];
+                    NSString *floatStr = [NSString stringWithFormat:formatStr, (float)(i * (_step) + _minValue) * exponentFloatValue];
+                    num = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
                     
                 }else{
                     
-                    num = [NSString stringWithFormat:@"%d", (int)(i * (_step) + _minValue)];
+                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
+                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
+                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:(int)(i * (_step) + _minValue)]];
+                    num = formatted;
+                    
+                    //num = [NSString stringWithFormat:@"%d", (int)(i * (_step) + _minValue)];
                     
                 }
-                
                 
                 if ([num isEqualToString:@"0"]) {
                     
@@ -959,9 +966,16 @@
             if (totalValue >= _maxValue) {
                 if(_exponent > 0){
                     NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
-                    _valueLab.text = [NSString stringWithFormat:formatStr,_maxValue * _exponentFloatValue];
+                    // _valueLab.text = [NSString stringWithFormat:formatStr,_maxValue * _exponentFloatValue];
+                    NSString * floatStr = [NSString stringWithFormat:formatStr,_maxValue * _exponentFloatValue];
+                    _valueLab.text = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
                 }else{
-                    _valueLab.text = [NSString stringWithFormat:@"%d",_maxValue];
+                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
+                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
+                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:_maxValue]];
+                    _valueLab.text = formatted;
+                    //_valueLab.text = [NSString stringWithFormat:@"%d",_maxValue];
                 }
                 
             }else if(totalValue <= _minValue){
@@ -972,9 +986,16 @@
                     if(_exponent > 0){
                         NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
                         
-                        _valueLab.text = [NSString stringWithFormat:formatStr,_minValue * _exponentFloatValue];
+                        // _valueLab.text = [NSString stringWithFormat:formatStr,_minValue * _exponentFloatValue];
+                        NSString * floatStr = [NSString stringWithFormat:formatStr,_minValue * _exponentFloatValue];
+                        _valueLab.text = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
                     }else{
-                        _valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
+                        NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+                        [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
+                        [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
+                        NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:_minValue]];
+                        _valueLab.text = formatted;
+                        //_valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
                     }
                 }
             }else{
@@ -982,10 +1003,19 @@
                     NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
                     
                     // _valueLab.text = [NSString stringWithFormat:formatStr,(value*_step) * _exponentFloatValue +_minValue];
-                    _valueLab.text = [NSString stringWithFormat:formatStr,(value*_step) * _exponentFloatValue + _minValue * _exponentFloatValue];
-                }else{
+                    NSString *floatStr = [NSString stringWithFormat:formatStr,(value*_step) * _exponentFloatValue + _minValue * _exponentFloatValue];
+                    //NSRange range = NSMakeRange(0, floatStr.length);
+                    //_valueLab.text = [floatStr stringByReplacingCharactersInRange:range withString:@","];
                     
-                    _valueLab.text = [NSString stringWithFormat:@"%d",(value*_step)  +_minValue];
+                    _valueLab.text = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
+                    
+                }else{
+                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
+                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
+                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:(value*_step)  +_minValue]];
+                    _valueLab.text = formatted;
+                    //_valueLab.text = [NSString stringWithFormat:@"%d",(value*_step)  +_minValue];
                 }
             }
         }
