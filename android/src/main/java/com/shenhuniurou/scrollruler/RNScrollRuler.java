@@ -118,6 +118,8 @@ public class RNScrollRuler extends View {
      * 中刻度粗细大小
      */
     private int midScaleStroke = 1;
+
+    private int centerScaleStroke = 3;
     /**
      * 大刻度粗细大小
      */
@@ -166,6 +168,7 @@ public class RNScrollRuler extends View {
     private Paint horzitalLinePaint;
     private Paint smallScalePaint;
     private Paint midScalePaint;
+    private Paint largerScalePaint;
     private Paint lagScalePaint;
     private Paint scaleNumPaint;
     private Paint resultNumPaint;
@@ -295,6 +298,7 @@ public class RNScrollRuler extends View {
         horzitalLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         smallScalePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         midScalePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        largerScalePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         lagScalePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         scaleNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         resultNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -307,6 +311,7 @@ public class RNScrollRuler extends View {
         horzitalLinePaint.setColor(smallScaleColor);
         smallScalePaint.setColor(getResources().getColor(R.color.midscale));
         midScalePaint.setColor(getResources().getColor(R.color.midscale));
+        largerScalePaint.setColor(getResources().getColor(R.color.darkgray));
         lagScalePaint.setColor(largeScaleColor);
         scaleNumPaint.setColor(getResources().getColor(R.color.num_color));
         resultNumPaint.setColor(resultNumColor);
@@ -328,6 +333,7 @@ public class RNScrollRuler extends View {
 
         smallScalePaint.setStrokeWidth(smallScaleStroke);
         midScalePaint.setStrokeWidth(midScaleStroke);
+        largerScalePaint.setStrokeWidth(centerScaleStroke);
         lagScalePaint.setStrokeWidth(largeScaleStroke);
         horzitalLinePaint.setStrokeWidth(largeScaleStroke);
 
@@ -613,9 +619,10 @@ public class RNScrollRuler extends View {
 
                 if (prediectedValue % (scaleLimit*10) == 0 || prediectedValue == minScale || prediectedValue == maxScale) {    //绘制整点刻度以及文字
 
+
                     //绘制刻度，绘制刻度数字
                     //canvas.drawLine(0, 0, 0, midScaleHeight, midScalePaint);
-                    canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
+                    canvas.drawLine(0, 25, 0, midScaleHeight + 48, largerScalePaint);
                     if (num1 == 0 && minScale == 0) {
                         scaleNumPaint.getTextBounds("不设", 0, "不设".length(), scaleNumRect);
                         canvas.drawText( (isTime? "0:00" : num1 + ""), -scaleNumRect.width() / 2, -resultNumRect.height() + 40, scaleNumPaint);
@@ -655,7 +662,13 @@ public class RNScrollRuler extends View {
                         //当滑动出范围的话，不绘制，去除左右边界
                     } else {
                         //绘制小数刻度
-                        canvas.drawLine(0, midScaleHeight + 45, 0, smallScaleHeight + 25, smallScalePaint);
+                        if (prediectedValue % (scaleLimit*5) == 0)
+                        {
+                            canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
+                        }
+                        else {
+                            canvas.drawLine(0, midScaleHeight + 45, 0, smallScaleHeight + 25, smallScalePaint);
+                        }
                     }
                 }
             }
