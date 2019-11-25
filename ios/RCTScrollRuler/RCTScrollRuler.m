@@ -245,7 +245,7 @@
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
-            }else if(tempInt%(5) == 0){
+            }else if(tempInt%(5*stepInt) == 0){
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, mediumLineY);
                 
@@ -504,8 +504,18 @@
     
     _defaultValue      = defaultValue;
     if (_maxValue != 0) {
-        [self setRealValue:defaultValue];
-        [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
+        if(_minValue > defaultValue){
+            
+            defaultValue = (_maxValue + _minValue) / 2;
+            
+            [self setRealValue:defaultValue];
+            NSLog(@"%f",((defaultValue)/(float)_step) * RulerGap );
+            [_collectionView setContentOffset:CGPointMake(((defaultValue)/(float)_step)*RulerGap, 0) animated:YES];
+        }else{
+            [self setRealValue:defaultValue];
+            [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
+        }
+        
     }
     //NSLog(@"setDefaultValue被调用了，defaultValue=%.2f", defaultValue);
 }
