@@ -1050,6 +1050,23 @@
     }
 }
 
+- (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView{
+    
+    int value = scrollView.contentOffset.x/RulerGap;
+    [self setRealValue:round(value) animated:YES];
+    //int value = scrollView.contentOffset.x/RulerGap;
+    //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
+    int totalValue = value*_step +_minValue;
+    //[self playAudio:totalValue];
+    if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
+        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+            [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+            
+        }
+    }
+}
+
+
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
     [self setRealValue:round(value) animated:YES];
