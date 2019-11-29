@@ -7,5 +7,6 @@
 <color name="white">#fff</color>
 <color name="yellow">#fff701</color>
 <color name="midscale">#999999</color>
+<color name="darkgray">#676767</color>
 <color name="num_color">#434343</color>
 </resources>

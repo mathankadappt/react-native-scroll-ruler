@@ -595,7 +595,13 @@ public class RNScrollRuler extends View {
         //这里是滑动时候不断回调给使用者的结果值
         //currentScale = new WeakReference<>(new BigDecimal(((width / 2 - moveX) / (scaleGap * scaleCount) + minScale) * 1)).get().setScale(0, BigDecimal.ROUND_HALF_UP).intValue();
         currentScale = new WeakReference<>(new BigDecimal(((Math.round((width / 2 - moveX) / scaleGap) * scaleLimit) + minScale) * 1)).get().setScale(0, BigDecimal.ROUND_HALF_UP).intValue();
-        resultText = String.valueOf((int) currentScale);
+        if (currentScale > 999) {
+            resultText = String.format("%.3f", (float) currentScale * 0.001);
+        }
+        else {
+            resultText = String.valueOf((int) currentScale);
+        }
+                //String.valueOf((int) currentScale);
         if(exponent > 0){
             exponentFloatValue = this.calculateExponentValue(exponent);
 
@@ -605,6 +611,7 @@ public class RNScrollRuler extends View {
         if(exponent > 0){
             String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
             resultText = String.format(formatStr,(float)currentScale * exponentFloatValue);
+           resultText =  resultText.replace(".",",");
 
         }
 
@@ -633,6 +640,10 @@ public class RNScrollRuler extends View {
                         int rulerValue = (num1 * scaleLimit) + minScale;
                         //((Math.round(num1 / scaleGap) * scaleLimit) + minScale) * 1;
                         String finalValue = "" + rulerValue;
+                        if(rulerValue > 999)
+                        {
+                            finalValue = String.format("%.3f", (float) rulerValue * 0.001f);
+                        }
                         if (this.isTime) {
                             String newFormatedValue = this.transformSecondsToMinutes(rulerValue);
                             // reposition the scale value
@@ -647,8 +658,8 @@ public class RNScrollRuler extends View {
                             }
                             if (exponent > 0) {
                                 String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
-                                finalValue = String.format(formatStr, (float) rulerValue * exponentFloatValue);
-
+                                finalValue = String.format(formatStr,(float)rulerValue * exponentFloatValue);
+                                finalValue =  finalValue.replace(".",",");
                             }
                             canvas.drawText(finalValue, -scaleNumRect.width() / 2 - 18, -resultNumRect.height() + 40, scaleNumPaint);
                         }
