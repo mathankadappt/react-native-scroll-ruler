@@ -762,7 +762,7 @@ public class RNScrollRuler extends View {
 
             // canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 120, resultNumPaint);
             if (this.isTime) {
-                String newFormatedValue = this.transformSecondsToMinutes(Integer.valueOf(resultText));
+                String newFormatedValue = this.transformSecondsToMinutes(Integer.valueOf(delegateValue));
                 canvas.drawText(newFormatedValue, width / 2 - resultNumRect.width() / 2 - 2, resultNumRect.height() - Math.round(52.727f * density), resultNumPaint);
             } else {
                 canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2 - 2, resultNumRect.height() - Math.round(52.727f * density), resultNumPaint);
