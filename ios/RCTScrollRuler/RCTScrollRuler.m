@@ -245,7 +245,7 @@
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
-            }else if(tempInt%(5) == 0){
+            }else if(tempInt%(5*stepInt) == 0){
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, mediumLineY);
                 
@@ -504,8 +504,18 @@
     
     _defaultValue      = defaultValue;
     if (_maxValue != 0) {
-        [self setRealValue:defaultValue];
-        [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
+        if(_minValue > defaultValue){
+            
+            defaultValue = (_maxValue + _minValue) / 2;
+            
+            [self setRealValue:defaultValue];
+            NSLog(@"%f",((defaultValue)/(float)_step) * RulerGap );
+            [_collectionView setContentOffset:CGPointMake(((defaultValue)/(float)_step)*RulerGap, 0) animated:YES];
+        }else{
+            [self setRealValue:defaultValue];
+            [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
+        }
+        
     }
     //NSLog(@"setDefaultValue被调用了，defaultValue=%.2f", defaultValue);
 }
@@ -922,7 +932,7 @@
     [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-            [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+            //  [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
             
         }
     }else{
@@ -1027,12 +1037,32 @@
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{//拖拽时没有滑动动画
     if (!decelerate){
         [self setRealValue:round(scrollView.contentOffset.x/(RulerGap)) animated:YES];
+        int value = scrollView.contentOffset.x/RulerGap;
+        //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
+        int totalValue = value*_step +_minValue;
+        //[self playAudio:totalValue];
+        if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
+            if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+                [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+                
+            }
+        }
     }
 }
 
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
     [self setRealValue:round(value) animated:YES];
+    //int value = scrollView.contentOffset.x/RulerGap;
+    //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
+    int totalValue = value*_step +_minValue;
+    //[self playAudio:totalValue];
+    if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
+        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+            [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+            
+        }
+    }
 }
 
 -(BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView{
