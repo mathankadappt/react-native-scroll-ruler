@@ -13,7 +13,9 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.net.Uri;
+
 import androidx.annotation.Nullable;
+
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -26,7 +28,7 @@ import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 
 import android.media.MediaPlayer;
-import  android.graphics.Path;
+import android.graphics.Path;
 import android.widget.Toast;
 
 /**
@@ -163,6 +165,7 @@ public class RNScrollRuler extends View {
     private ValueAnimator valueAnimator;
     private VelocityTracker velocityTracker = VelocityTracker.obtain();
     private String resultText = String.valueOf(firstScale);
+    private String delegateValue = String.valueOf(firstScale);
     private String cacheResultText = String.valueOf(firstScale);
     private Paint bgPaint;
     private Paint horzitalLinePaint;
@@ -194,12 +197,13 @@ public class RNScrollRuler extends View {
     private static Context sContext;
     private Paint resultRectPaint;
 
-    private String  markerTextColor = "#ffffff";
-    private String markerColor  = "#ff8d2a";
+    private String markerTextColor = "#ffffff";
+    private String markerColor = "#ff8d2a";
 
     //private  int maxScaleValue  = 100;
 
     MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.ticker);
+
     public static void setContext(Context context) {
         if (context == null) {
             throw new IllegalArgumentException("context cannot be null!");
@@ -303,8 +307,6 @@ public class RNScrollRuler extends View {
         scaleNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         resultNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         kgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-        
 
 
         bgPaint.setColor(bgColor);
@@ -410,7 +412,7 @@ public class RNScrollRuler extends View {
                 } else if (moveX <= getWhichScalMovex(maxScale)) {
                     moveX = getWhichScalMovex(maxScale);
                 }
-                Log.d(TAG, "onTouchEvent: "+moveX+" c: "+currentX+" ,X: "+getWhichScalMovex(maxScale));
+                Log.d(TAG, "onTouchEvent: " + moveX + " c: " + currentX + " ,X: " + getWhichScalMovex(maxScale));
                 break;
             case MotionEvent.ACTION_UP:
                 mp.pause();
@@ -429,18 +431,15 @@ public class RNScrollRuler extends View {
         }
 
 
-
         invalidate();
         return true;
     }
 
-    private void  playTicks()
-    {
-        if(!cacheResultText.equalsIgnoreCase(resultText)) {
+    private void playTicks() {
+        if (!cacheResultText.equalsIgnoreCase(resultText)) {
             mp.start();
             cacheResultText = resultText;
-        }
-        else {
+        } else {
             mp.pause();
         }
     }
@@ -485,23 +484,26 @@ public class RNScrollRuler extends View {
     }
 
     private float getWhichScalMovex(float scale) {
-        float value = width / 2 - scaleGap * scaleCount ;//* (scale - minScale);
-        return  value;
+        float value = width / 2 - scaleGap * scaleCount;//* (scale - minScale);
+        return value;
     }
+
     private float getWhichScalMovexFull(float scale) {
-        float value = width / 2 - (scaleGap *  ((scale - minScale)/scaleLimit));
+        float value = width / 2 - (scaleGap * ((scale - minScale) / scaleLimit));
 
-        return  value;
+        return value;
     }
 
- private String transformSecondsToMinutes (float timeInSec ){
+    private String transformSecondsToMinutes(float timeInSec) {
         double minutes = Math.floor(timeInSec / 60);
         double seconds = timeInSec - minutes * 60;
         int min = (int) minutes;
         int sec = (int) seconds;
         String secStr = (sec < 10) ? ('0' + String.valueOf(sec)) : String.valueOf(sec);
-        return  (int)minutes + ":" + secStr;
-    };
+        return (int) minutes + ":" + secStr;
+    }
+
+    ;
 
     private void drawScaleAndNum(Canvas canvas) {
         canvas.translate(0, (showScaleResult ? resultNumRect.height() : 0) + rulerToResultgap);//移动画布到结果值的下面
@@ -576,7 +578,7 @@ public class RNScrollRuler extends View {
                         super.onAnimationEnd(animation);
                         //这里是滑动结束时候回调给使用者的结果值
                         if (onChooseResulterListener != null) {
-                            onChooseResulterListener.onEndResult(resultText);
+                            onChooseResulterListener.onEndResult(delegateValue);
                         }
                     }
                 });
@@ -594,37 +596,42 @@ public class RNScrollRuler extends View {
 
         //这里是滑动时候不断回调给使用者的结果值
         //currentScale = new WeakReference<>(new BigDecimal(((width / 2 - moveX) / (scaleGap * scaleCount) + minScale) * 1)).get().setScale(0, BigDecimal.ROUND_HALF_UP).intValue();
+
+
         currentScale = new WeakReference<>(new BigDecimal(((Math.round((width / 2 - moveX) / scaleGap) * scaleLimit) + minScale) * 1)).get().setScale(0, BigDecimal.ROUND_HALF_UP).intValue();
+        delegateValue = String.valueOf((int) currentScale);
+        ;
         if (currentScale > 999) {
             resultText = String.format("%.3f", (float) currentScale * 0.001);
-        }
-        else {
+        } else {
             resultText = String.valueOf((int) currentScale);
         }
-                //String.valueOf((int) currentScale);
-        if(exponent > 0){
+
+        //String.valueOf((int) currentScale);
+        if (exponent > 0) {
             exponentFloatValue = this.calculateExponentValue(exponent);
 
-        }else{
+        } else {
             exponentFloatValue = 1;
         }
-        if(exponent > 0){
+        if (exponent > 0) {
             String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
-            resultText = String.format(formatStr,(float)currentScale * exponentFloatValue);
-           resultText =  resultText.replace(".",",");
+            resultText = String.format(formatStr, (float) currentScale * exponentFloatValue);
+            delegateValue = String.format(formatStr, (float) currentScale * exponentFloatValue);
+            resultText = resultText.replace(".", ",");
 
         }
 
         if (onChooseResulterListener != null) {
-            onChooseResulterListener.onScrollResult(resultText); //接口不断回调给使用者结果值
+            onChooseResulterListener.onScrollResult(delegateValue); //接口不断回调给使用者结果值
         }
-        Log.d(TAG, "drawScaleAndNum: X: "+moveX);
+        Log.d(TAG, "drawScaleAndNum: X: " + moveX);
         //绘制当前屏幕可见刻度,不需要裁剪屏幕,while循环只会执行·屏幕宽度/刻度宽度·次,大部分的绘制都是if(curDis<width)这样子内存暂用相对来说会比较高。。
         while (rulerRight < width) {
             int prediectedValue = (num1 * scaleLimit) + minScale;
             if (prediectedValue >= minScale && prediectedValue <= maxScale) {
 
-                if (prediectedValue % (scaleLimit*10) == 0 || prediectedValue == minScale || prediectedValue == maxScale) {    //绘制整点刻度以及文字
+                if (prediectedValue % (scaleLimit * 10) == 0 || prediectedValue == minScale || prediectedValue == maxScale) {    //绘制整点刻度以及文字
 
 
                     //绘制刻度，绘制刻度数字
@@ -632,7 +639,7 @@ public class RNScrollRuler extends View {
                     canvas.drawLine(0, 25, 0, midScaleHeight + 48, largerScalePaint);
                     if (num1 == 0 && minScale == 0) {
                         scaleNumPaint.getTextBounds("不设", 0, "不设".length(), scaleNumRect);
-                        canvas.drawText( (isTime? "0:00" : num1 + ""), -scaleNumRect.width() / 2, -resultNumRect.height() + 40, scaleNumPaint);
+                        canvas.drawText((isTime ? "0:00" : num1 + ""), -scaleNumRect.width() / 2, -resultNumRect.height() + 40, scaleNumPaint);
                         //canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                     } else {
                         scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
@@ -640,8 +647,7 @@ public class RNScrollRuler extends View {
                         int rulerValue = (num1 * scaleLimit) + minScale;
                         //((Math.round(num1 / scaleGap) * scaleLimit) + minScale) * 1;
                         String finalValue = "" + rulerValue;
-                        if(rulerValue > 999)
-                        {
+                        if (rulerValue > 999) {
                             finalValue = String.format("%.3f", (float) rulerValue * 0.001f);
                         }
                         if (this.isTime) {
@@ -658,8 +664,8 @@ public class RNScrollRuler extends View {
                             }
                             if (exponent > 0) {
                                 String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
-                                finalValue = String.format(formatStr,(float)rulerValue * exponentFloatValue);
-                                finalValue =  finalValue.replace(".",",");
+                                finalValue = String.format(formatStr, (float) rulerValue * exponentFloatValue);
+                                finalValue = finalValue.replace(".", ",");
                             }
                             canvas.drawText(finalValue, -scaleNumRect.width() / 2 - 18, -resultNumRect.height() + 40, scaleNumPaint);
                         }
@@ -673,11 +679,9 @@ public class RNScrollRuler extends View {
                         //当滑动出范围的话，不绘制，去除左右边界
                     } else {
                         //绘制小数刻度
-                        if (prediectedValue % (scaleLimit*5) == 0)
-                        {
+                        if (prediectedValue % (scaleLimit * 5) == 0) {
                             canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
-                        }
-                        else {
+                        } else {
                             canvas.drawLine(0, midScaleHeight + 45, 0, smallScaleHeight + 25, smallScalePaint);
                         }
                     }
@@ -691,7 +695,7 @@ public class RNScrollRuler extends View {
         canvas.restore();
         //绘制屏幕中间用来选中刻度的最大刻度
         //canvas.drawLine(width / 2, 0, width / 2, lagScaleHeight, lagScalePaint);
-        canvas.drawLine(width / 2, resultNumRect.height()- 180, width / 2, midScaleHeight+48 , lagScalePaint);
+        canvas.drawLine(width / 2, resultNumRect.height() - 180, width / 2, midScaleHeight + 48, lagScalePaint);
     }
 
     public void drawTriangle(Canvas canvas, Paint paint, int x, int y, int width) {
@@ -705,7 +709,7 @@ public class RNScrollRuler extends View {
         path.lineTo(x, y - halfWidth); // Back to Top
 
         Path oval = new Path();
-        matrix.postRotate(60, x+halfWidth, y);
+        matrix.postRotate(60, x + halfWidth, y);
         path.transform(matrix, path);
 
 
@@ -727,27 +731,27 @@ public class RNScrollRuler extends View {
         //resultRectPaint.setColor(getResources().getColor(R.color.num_color));
         resultRectPaint.setColor(Color.parseColor(this.markerColor));
         resultRectPaint.setStrokeWidth(4);
-       // Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
+        // Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
 
-        Rect rectangle = new Rect(width / 2 + Math.round(58 * density), -Math.round(65.46f * density), width / 2 - Math.round(54.54f * density), resultNumRect.height()- Math.round(36.36f * density) );
+        Rect rectangle = new Rect(width / 2 + Math.round(58 * density), -Math.round(65.46f * density), width / 2 - Math.round(54.54f * density), resultNumRect.height() - Math.round(36.36f * density));
         canvas.drawRect(rectangle, resultRectPaint);
 
         Paint paint = new Paint();
         //paint.setColor(getResources().getColor(R.color.result_text_color));
         paint.setColor(Color.parseColor(this.markerColor));
 
-        drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density),  resultNumRect.height()- Math.round(36.36f * density), Math.round(54.54f * density));
+        drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density), resultNumRect.height() - Math.round(36.36f * density), Math.round(54.54f * density));
 
         //drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
         if (resultText.equals("0")) {
-            resultText = isTime ?"0:00":"0";
+            resultText = isTime ? "0:00" : "0";
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
             resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
 
             //resultNumPaint.setColor(getResources().getColor(R.color.white));
             resultNumPaint.setColor(Color.parseColor(this.markerTextColor));
             // canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2, resultNumRect.height(), resultNumPaint);
-            canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 145, resultNumPaint);
+            canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2 - 2, resultNumRect.height() - 145, resultNumPaint);
 
         } else {
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
@@ -757,11 +761,11 @@ public class RNScrollRuler extends View {
             resultNumPaint.setTypeface(Typeface.DEFAULT_BOLD);
 
             // canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 120, resultNumPaint);
-            if(this.isTime){
-                String newFormatedValue =  this.transformSecondsToMinutes( Integer.valueOf(resultText) );
-                canvas.drawText(newFormatedValue, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - Math.round(52.727f * density), resultNumPaint);
-            }else{
-                canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - Math.round(52.727f * density), resultNumPaint);
+            if (this.isTime) {
+                String newFormatedValue = this.transformSecondsToMinutes(Integer.valueOf(resultText));
+                canvas.drawText(newFormatedValue, width / 2 - resultNumRect.width() / 2 - 2, resultNumRect.height() - Math.round(52.727f * density), resultNumPaint);
+            } else {
+                canvas.drawText(resultText, width / 2 - resultNumRect.width() / 2 - 2, resultNumRect.height() - Math.round(52.727f * density), resultNumPaint);
             }
 
             kgPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, unitTextSize, getResources().getDisplayMetrics()));
@@ -810,33 +814,33 @@ public class RNScrollRuler extends View {
     public void setScaleCount(int scaleCount) {
         //this.scaleCount = scaleCount;
         //invalidate();
-        moveX = width/2 + (scaleGap * (firstScale-minScale));
+        moveX = width / 2 + (scaleGap * (firstScale - minScale));
         invalidate();
     }
 
-    public void  recalculate()
-    {
+    public void recalculate() {
 
     }
+
     public void setScaleGap(int scaleGap) {
         this.scaleGap = scaleGap;
         invalidate();
     }
 
     public void setMinScale(int minScale) {
-        this.minScale = minScale ;/// scaleLimit;
+        this.minScale = minScale;/// scaleLimit;
         recalcuateScaleCount();
         invalidate();
     }
 
     public void setFirstScale(float firstScale) {
-        this.firstScale = firstScale ;/// scaleLimit;
+        this.firstScale = firstScale;/// scaleLimit;
 
         invalidate();
     }
 
     public void setMaxScale(int maxScale) {
-        this.maxScale = maxScale ;/// scaleLimit;
+        this.maxScale = maxScale;/// scaleLimit;
         recalcuateScaleCount();
         invalidate();
     }
@@ -904,9 +908,10 @@ public class RNScrollRuler extends View {
         isBgRoundRect = bgRoundRect;
         invalidate();
     }
-    private void recalcuateScaleCount(){
-        scaleCount = (maxScale-minScale)/scaleLimit;
-        firstScale =  Math.round (((float) maxScale+ (float) minScale)/2);
+
+    private void recalcuateScaleCount() {
+        scaleCount = (maxScale - minScale) / scaleLimit;
+        firstScale = Math.round(((float) maxScale + (float) minScale) / 2);
     }
 
     public void setScaleLimit(int scaleLimit) {
@@ -925,6 +930,7 @@ public class RNScrollRuler extends View {
         this.unitColor = unitColor;
         invalidate();
     }
+
     public void checkIsTime(boolean isTime) {
         this.isTime = isTime;
         invalidate();
@@ -939,22 +945,23 @@ public class RNScrollRuler extends View {
         this.markerColor = markerColor;
         invalidate();
     }
+
     public void setExponent(int exponent) {
         this.exponent = exponent;
         invalidate();
     }
 
-    public float calculateExponentValue(int exp){
+    public float calculateExponentValue(int exp) {
 
-        if(exp == 1){
+        if (exp == 1) {
             return 0.1f;
-        }else if (exp == 2){
+        } else if (exp == 2) {
             return 0.01f;
-        }else if (exp == 3){
+        } else if (exp == 3) {
             return 0.001f;
-        }else if (exp == 4){
+        } else if (exp == 4) {
             return 0.0001f;
-        }else if (exp == 5){
+        } else if (exp == 5) {
             return 0.00001f;
         }
         return 0.1f;
