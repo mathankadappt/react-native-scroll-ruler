@@ -194,7 +194,7 @@
             }
             int stepInt = (int)_step;
             
-            if ((tempInt%(_betweenNumber*stepInt) == 0)||(tempInt == _totalMaxValue)||(tempInt == _baseMinValue)){
+            if ((tempInt%(_betweenNumber*stepInt) == 0)||(tempInt == _baseMinValue)){
                 
                 if(exponent > 0){
                     exponentFloatValue = [self calculateExponentValue:exponent];
@@ -250,6 +250,7 @@
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, mediumLineY);
                 
             }else{
+                
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
             }
