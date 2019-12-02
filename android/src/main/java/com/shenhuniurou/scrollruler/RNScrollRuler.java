@@ -699,7 +699,15 @@ public class RNScrollRuler extends View {
 
 
                 } else {   //绘制小数刻度
-                    if ((moveX >= 0 && rulerRight < moveX) || width / 2 - rulerRight < getWhichScalMovex(maxScale) - moveX) {
+                    if( prediectedValue == maxScale)
+                    {
+                        if (prediectedValue % (scaleLimit * 5) == 0) {
+                            canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
+                        } else {
+                            canvas.drawLine(0, midScaleHeight + 45, 0, smallScaleHeight + 25, smallScalePaint);
+                        }
+                    }
+                    else if ((moveX >= 0 && rulerRight < moveX) || width / 2 - rulerRight < getWhichScalMovex(maxScale) - moveX) {
                         //当滑动出范围的话，不绘制，去除左右边界
                     } else {
                         //绘制小数刻度
