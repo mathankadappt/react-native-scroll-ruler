@@ -194,7 +194,7 @@
             }
             int stepInt = (int)_step;
             
-            if ((tempInt%(_betweenNumber*stepInt) == 0)||(tempInt == _baseMinValue)){
+            if ((tempInt%(_betweenNumber*stepInt) == 0)){
                 
                 if(exponent > 0){
                     exponentFloatValue = [self calculateExponentValue:exponent];
@@ -238,13 +238,14 @@
                     predictedX = (startX+lineCenterX*i-width/2)+width/2;
                 }
                 else if(self.row == self.totalRows-1 && i > 0 ){
-                    predictedX = (startX+lineCenterX*i-width/2)-width/2;
+                    predictedX = ((startX+lineCenterX*i-width/2)-width/2)+ 10;
                 }
                 
-                [num drawInRect:CGRectMake(predictedX, longLineY-14, width, 16) withAttributes:attribute];
+                [num drawInRect:CGRectMake(predictedX , longLineY-14, width + 10, 16) withAttributes:attribute];
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
+                
             }else if(tempInt%(5*stepInt) == 0){
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, mediumLineY);
