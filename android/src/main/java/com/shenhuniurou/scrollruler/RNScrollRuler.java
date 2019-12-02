@@ -655,7 +655,7 @@ public class RNScrollRuler extends View {
             int prediectedValue = (num1 * scaleLimit) + minScale;
             if (prediectedValue >= minScale && prediectedValue <= maxScale) {
 
-                if (prediectedValue % (scaleLimit * 10) == 0 || prediectedValue == minScale) {    //绘制整点刻度以及文字
+                if (prediectedValue % (scaleLimit * 10) == 0 ) {    //绘制整点刻度以及文字
 
 
                     //绘制刻度，绘制刻度数字
@@ -699,7 +699,7 @@ public class RNScrollRuler extends View {
 
 
                 } else {   //绘制小数刻度
-                    if( prediectedValue == maxScale)
+                    if( prediectedValue == maxScale || prediectedValue == minScale)
                     {
                         if (prediectedValue % (scaleLimit * 5) == 0) {
                             canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
