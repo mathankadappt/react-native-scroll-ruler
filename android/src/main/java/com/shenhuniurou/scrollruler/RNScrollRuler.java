@@ -180,6 +180,8 @@ public class RNScrollRuler extends View {
     private Rect resultNumRect;
     private Rect kgRect;
     private RectF bgRect;
+    private Rect leftButton;
+    private Rect rightButton;
     private int height, width;
     private int smallScaleHeight;
     private int midScaleHeight;
@@ -377,6 +379,12 @@ public class RNScrollRuler extends View {
 
         width = widthSize + getPaddingLeft() + getPaddingRight();
 
+
+        float density = getResources().getDisplayMetrics().density;
+         leftButton = new Rect(0, -Math.round(10.14f * density),  Math.round(54.54f * density), rulerHeight+Math.round(10.14f * density));
+        rightButton = new Rect(width-Math.round(54.54f * density), -Math.round(10.14f * density), width + Math.round(54.54f * density), rulerHeight+Math.round(10.14f * density));
+
+
         setMeasuredDimension(width, height);
 
     }
@@ -402,6 +410,7 @@ public class RNScrollRuler extends View {
                     valueAnimator.cancel();
                 }
                 downX = event.getX();
+               // doManualMove(event);
                 break;
             case MotionEvent.ACTION_MOVE:
 
@@ -430,6 +439,7 @@ public class RNScrollRuler extends View {
                 break;
         }
 
+        playTicks();
 
         invalidate();
         return true;
@@ -443,6 +453,20 @@ public class RNScrollRuler extends View {
             mp.pause();
         }
     }
+
+    private void doManualMove(MotionEvent event)
+    {
+        if (leftButton.contains(Math.round(event.getX()),Math.round(event.getY()))){
+            moveX += scaleGap;
+            invalidate();
+        }
+        else if (rightButton.contains(Math.round(event.getX()),Math.round(event.getY()))){
+            moveX -= scaleGap;
+            invalidate();
+        }
+
+    }
+
 
 
     private void autoVelocityScroll(int xVelocity) {
@@ -466,7 +490,7 @@ public class RNScrollRuler extends View {
                     moveX = getWhichScalMovex(maxScale);
                 }
                 lastMoveX = moveX;
-
+                playTicks();
                 invalidate();
             }
 
@@ -475,7 +499,7 @@ public class RNScrollRuler extends View {
             @Override
             public void onAnimationEnd(Animator animation) {
                 isUp = true;
-
+                playTicks();
                 invalidate();
             }
         });
@@ -631,7 +655,7 @@ public class RNScrollRuler extends View {
             int prediectedValue = (num1 * scaleLimit) + minScale;
             if (prediectedValue >= minScale && prediectedValue <= maxScale) {
 
-                if (prediectedValue % (scaleLimit * 10) == 0 || prediectedValue == minScale || prediectedValue == maxScale) {    //绘制整点刻度以及文字
+                if (prediectedValue % (scaleLimit * 10) == 0 || prediectedValue == minScale) {    //绘制整点刻度以及文字
 
 
                     //绘制刻度，绘制刻度数字
@@ -723,7 +747,7 @@ public class RNScrollRuler extends View {
             return;
         }
         float density = getResources().getDisplayMetrics().density;
-        playTicks();
+
         canvas.translate(0, -resultNumRect.height() - rulerToResultgap / 2);  //移动画布到正确的位置来绘制结果值
         //CHANGES
         resultRectPaint = new Paint();
@@ -741,6 +765,13 @@ public class RNScrollRuler extends View {
         paint.setColor(Color.parseColor(this.markerColor));
 
         drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density), resultNumRect.height() - Math.round(36.36f * density), Math.round(54.54f * density));
+        //drawButtons(canvas,paint,0,-20, Math.round(40.0f*density),Math.round(resultNumRect.height() * density));
+
+
+        //Enable for Left and Right button
+       // canvas.drawRect(leftButton, resultRectPaint);
+       //  canvas.drawRect(rightButton, resultRectPaint);
+
 
         //drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
         if (resultText.equals("0")) {
