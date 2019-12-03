@@ -26,6 +26,10 @@ import android.view.animation.DecelerateInterpolator;
 
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 import android.media.MediaPlayer;
 import android.graphics.Path;
@@ -381,8 +385,8 @@ public class RNScrollRuler extends View {
 
 
         float density = getResources().getDisplayMetrics().density;
-         leftButton = new Rect(0, -Math.round(10.14f * density),  Math.round(54.54f * density), rulerHeight+Math.round(10.14f * density));
-        rightButton = new Rect(width-Math.round(54.54f * density), -Math.round(10.14f * density), width + Math.round(54.54f * density), rulerHeight+Math.round(10.14f * density));
+        leftButton = new Rect(0, -Math.round(10.14f * density), Math.round(54.54f * density), rulerHeight + Math.round(10.14f * density));
+        rightButton = new Rect(width - Math.round(54.54f * density), -Math.round(10.14f * density), width + Math.round(54.54f * density), rulerHeight + Math.round(10.14f * density));
 
 
         setMeasuredDimension(width, height);
@@ -410,7 +414,7 @@ public class RNScrollRuler extends View {
                     valueAnimator.cancel();
                 }
                 downX = event.getX();
-               // doManualMove(event);
+                // doManualMove(event);
                 break;
             case MotionEvent.ACTION_MOVE:
 
@@ -454,19 +458,16 @@ public class RNScrollRuler extends View {
         }
     }
 
-    private void doManualMove(MotionEvent event)
-    {
-        if (leftButton.contains(Math.round(event.getX()),Math.round(event.getY()))){
+    private void doManualMove(MotionEvent event) {
+        if (leftButton.contains(Math.round(event.getX()), Math.round(event.getY()))) {
             moveX += scaleGap;
             invalidate();
-        }
-        else if (rightButton.contains(Math.round(event.getX()),Math.round(event.getY()))){
+        } else if (rightButton.contains(Math.round(event.getX()), Math.round(event.getY()))) {
             moveX -= scaleGap;
             invalidate();
         }
 
     }
-
 
 
     private void autoVelocityScroll(int xVelocity) {
@@ -513,7 +514,7 @@ public class RNScrollRuler extends View {
     }
 
     private float getWhichScalMovexFull(float scale) {
-        float value = width / 2 - (scaleGap * ((scale - minScale) / scaleLimit));
+        float value = Math.round ((float) width / 2.0f) - Math.round (scaleGap * ((float)(scale - minScale) / (float) scaleLimit));
 
         return value;
     }
@@ -527,7 +528,35 @@ public class RNScrollRuler extends View {
         return (int) minutes + ":" + secStr;
     }
 
-    ;
+    private String formatValue(float rulerValue) {
+
+        if (this.isTime) {
+            return this.transformSecondsToMinutes(rulerValue);
+        }
+
+        Locale l = Locale.getDefault();
+        DecimalFormat formatter = (DecimalFormat) NumberFormat.getInstance(l);
+
+        DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
+        symbols.setGroupingSeparator('.'); // setting the thousand separator
+        symbols.setDecimalSeparator(','); //optionally setting the decimal separator
+
+        formatter.setDecimalFormatSymbols(symbols);
+        formatter.setMinimumFractionDigits(exponent);
+        formatter.setMaximumFractionDigits(exponent);
+
+        //String.valueOf((int) currentScale);
+        if (exponent > 0) {
+
+            exponentFloatValue = this.calculateExponentValue(exponent);
+            rulerValue = rulerValue * exponentFloatValue;
+        }
+
+
+        return formatter.format(rulerValue);
+
+
+    }
 
     private void drawScaleAndNum(Canvas canvas) {
         canvas.translate(0, (showScaleResult ? resultNumRect.height() : 0) + rulerToResultgap);//移动画布到结果值的下面
@@ -542,6 +571,7 @@ public class RNScrollRuler extends View {
             moveX = getWhichScalMovexFull(firstScale);          //如果设置了默认滑动位置，计算出需要滑动的距离
             lastMoveX = moveX;
             firstScale = -1;                                //将结果置为-1，下次不再计算初始位置
+            autoVelocityScroll(10);
         }
 
         if (computeScale != -1) {//弹性滑动到目标刻度
@@ -618,33 +648,17 @@ public class RNScrollRuler extends View {
 
         canvas.translate(num2, 0);    //不加该偏移的话，滑动时刻度不会落在0~1之间只会落在整数上面,其实这个都能设置一种模式了，毕竟初衷就是指针不会落在小数上面
 
-        //这里是滑动时候不断回调给使用者的结果值
-        //currentScale = new WeakReference<>(new BigDecimal(((width / 2 - moveX) / (scaleGap * scaleCount) + minScale) * 1)).get().setScale(0, BigDecimal.ROUND_HALF_UP).intValue();
-
-
         currentScale = new WeakReference<>(new BigDecimal(((Math.round((width / 2 - moveX) / scaleGap) * scaleLimit) + minScale) * 1)).get().setScale(0, BigDecimal.ROUND_HALF_UP).intValue();
         delegateValue = String.valueOf((int) currentScale);
-        ;
-        if (currentScale > 999) {
-            resultText = String.format("%.3f", (float) currentScale * 0.001);
-        } else {
-            resultText = String.valueOf((int) currentScale);
-        }
 
-        //String.valueOf((int) currentScale);
+
         if (exponent > 0) {
             exponentFloatValue = this.calculateExponentValue(exponent);
-
-        } else {
-            exponentFloatValue = 1;
-        }
-        if (exponent > 0) {
             String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
-            resultText = String.format(formatStr, (float) currentScale * exponentFloatValue);
             delegateValue = String.format(formatStr, (float) currentScale * exponentFloatValue);
-            resultText = resultText.replace(".", ",");
 
         }
+        resultText = formatValue(currentScale);
 
         if (onChooseResulterListener != null) {
             onChooseResulterListener.onScrollResult(delegateValue); //接口不断回调给使用者结果值
@@ -655,7 +669,7 @@ public class RNScrollRuler extends View {
             int prediectedValue = (num1 * scaleLimit) + minScale;
             if (prediectedValue >= minScale && prediectedValue <= maxScale) {
 
-                if (prediectedValue % (scaleLimit * 10) == 0 ) {    //绘制整点刻度以及文字
+                if (prediectedValue % (scaleLimit * 10) == 0) {    //绘制整点刻度以及文字
 
 
                     //绘制刻度，绘制刻度数字
@@ -667,47 +681,20 @@ public class RNScrollRuler extends View {
                         //canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                     } else {
                         scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
-                        //int rulerValue = (num1 / scaleCount + minScale) * 1;
                         int rulerValue = (num1 * scaleLimit) + minScale;
-                        //((Math.round(num1 / scaleGap) * scaleLimit) + minScale) * 1;
-                        String finalValue = "" + rulerValue;
-                        if (rulerValue > 999) {
-                            finalValue = String.format("%.3f", (float) rulerValue * 0.001f);
-                        }
-                        if (this.isTime) {
-                            String newFormatedValue = this.transformSecondsToMinutes(rulerValue);
-                            // reposition the scale value
-                            canvas.drawText(newFormatedValue, (-scaleNumRect.width() / 2) - 18, -resultNumRect.height() + 40, scaleNumPaint);
-                        } else {
-                            // reposition the scale vlaue
-                            if (exponent > 0) {
-                                exponentFloatValue = this.calculateExponentValue(exponent);
-
-                            } else {
-                                exponentFloatValue = 1;
-                            }
-                            if (exponent > 0) {
-                                String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
-                                finalValue = String.format(formatStr, (float) rulerValue * exponentFloatValue);
-                                finalValue = finalValue.replace(".", ",");
-                            }
-                            canvas.drawText(finalValue, -scaleNumRect.width() / 2 - 18, -resultNumRect.height() + 40, scaleNumPaint);
-                        }
-
-
+                        String finalValue = formatValue(rulerValue);
+                        canvas.drawText(finalValue, -scaleNumRect.width() / 2 - 18, -resultNumRect.height() + 40, scaleNumPaint);
                     }
 
 
                 } else {   //绘制小数刻度
-                    if( prediectedValue == maxScale || prediectedValue == minScale)
-                    {
+                    if (prediectedValue == maxScale || prediectedValue == minScale) {
                         if (prediectedValue % (scaleLimit * 5) == 0) {
                             canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
                         } else {
                             canvas.drawLine(0, midScaleHeight + 45, 0, smallScaleHeight + 25, smallScalePaint);
                         }
-                    }
-                    else if ((moveX >= 0 && rulerRight < moveX) || width / 2 - rulerRight < getWhichScalMovex(maxScale) - moveX) {
+                    } else if ((moveX >= 0 && rulerRight < moveX) || width / 2 - rulerRight < getWhichScalMovex(maxScale) - moveX) {
                         //当滑动出范围的话，不绘制，去除左右边界
                     } else {
                         //绘制小数刻度
@@ -777,8 +764,8 @@ public class RNScrollRuler extends View {
 
 
         //Enable for Left and Right button
-       // canvas.drawRect(leftButton, resultRectPaint);
-       //  canvas.drawRect(rightButton, resultRectPaint);
+        // canvas.drawRect(leftButton, resultRectPaint);
+        //  canvas.drawRect(rightButton, resultRectPaint);
 
 
         //drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
