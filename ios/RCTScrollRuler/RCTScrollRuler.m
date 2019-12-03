@@ -958,7 +958,8 @@
             if (totalValue >= _maxValue) {
                 int minutes =  floor(_maxValue / 60);
                 int seconds = _maxValue - minutes * 60;
-                _valueLab.text = [NSString stringWithFormat:@"%d:%d", minutes, seconds];
+                NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
+                _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
             }else if(totalValue <= _minValue){
                 if(_minValue == 0) {
                     _valueLab.text = @"0:00";
