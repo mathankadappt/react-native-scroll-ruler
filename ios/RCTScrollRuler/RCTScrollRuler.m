@@ -244,7 +244,7 @@
                 
                 CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
                 
-                CGFloat predictedX = startX+lineCenterX*i-width/2;
+                CGFloat predictedX = startX+lineCenterX*i-width/2 - 3;
                 if(self.row == 0 && i == 0){
                     predictedX = (startX+lineCenterX*i-width/2)+width/2;
                 }
@@ -252,7 +252,7 @@
                     predictedX = ((startX+lineCenterX*i-width/2)-width/2)+ 10;
                 }
                 
-                [num drawInRect:CGRectMake(predictedX , longLineY-14, width + 10, 16) withAttributes:attribute];
+                [num drawInRect:CGRectMake(predictedX , longLineY-14, width + 40, 16) withAttributes:attribute];
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
@@ -739,7 +739,7 @@
 }
 -(UILabel *)valueLab{
     if (!_valueLab) {
-        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-30, -20, 90, 40)];
+        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-30, -20, 80, 40)];
         _valueLab.textColor = [UIColor whiteColor];//[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
         
         //set the label to fit text content before rendered as a image
