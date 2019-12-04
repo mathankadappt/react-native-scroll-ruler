@@ -451,10 +451,11 @@ public class RNScrollRuler extends View {
 
     private void playTicks() {
         if (!cacheResultText.equalsIgnoreCase(resultText)) {
+            //mp.pause();
             mp.start();
             cacheResultText = resultText;
         } else {
-            mp.pause();
+
         }
     }
 
@@ -680,10 +681,11 @@ public class RNScrollRuler extends View {
                         canvas.drawText((isTime ? "0:00" : num1 + ""), -scaleNumRect.width() / 2, -resultNumRect.height() + 40, scaleNumPaint);
                         //canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                     } else {
-                        scaleNumPaint.getTextBounds(num1 / scaleGap + minScale + "", 0, (num1 / scaleGap + minScale + "").length(), scaleNumRect);
+
                         int rulerValue = (num1 * scaleLimit) + minScale;
                         String finalValue = formatValue(rulerValue);
-                        canvas.drawText(finalValue, -scaleNumRect.width() / 2 - 18, -resultNumRect.height() + 40, scaleNumPaint);
+                        scaleNumPaint.getTextBounds(finalValue, 0, finalValue.length(), scaleNumRect);
+                        canvas.drawText(finalValue, -scaleNumRect.width() / 2 , -resultNumRect.height() + 40, scaleNumPaint);
                     }
 
 
