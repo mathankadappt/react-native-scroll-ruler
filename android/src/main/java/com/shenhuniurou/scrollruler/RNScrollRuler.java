@@ -664,7 +664,8 @@ public class RNScrollRuler extends View {
         if (onChooseResulterListener != null) {
             onChooseResulterListener.onScrollResult(delegateValue); //接口不断回调给使用者结果值
         }
-        Log.d(TAG, "drawScaleAndNum: X: " + moveX);
+        float rulerBaseY = rulerHeight-40;
+        //Log.d(TAG, " drawScaleAndNum: X: " + moveX);
         //绘制当前屏幕可见刻度,不需要裁剪屏幕,while循环只会执行·屏幕宽度/刻度宽度·次,大部分的绘制都是if(curDis<width)这样子内存暂用相对来说会比较高。。
         while (rulerRight < width) {
             int prediectedValue = (num1 * scaleLimit) + minScale;
@@ -675,9 +676,9 @@ public class RNScrollRuler extends View {
 
                     //绘制刻度，绘制刻度数字
                     //canvas.drawLine(0, 0, 0, midScaleHeight, midScalePaint);
-                    canvas.drawLine(0, 25, 0, midScaleHeight + 48, largerScalePaint);
+                    canvas.drawLine(0, 25, 0, rulerBaseY, largerScalePaint);
                     if (num1 == 0 && minScale == 0) {
-                        scaleNumPaint.getTextBounds("不设", 0, "不设".length(), scaleNumRect);
+                        scaleNumPaint.getTextBounds("0", 0, "0".length(), scaleNumRect);
                         canvas.drawText((isTime ? "0:00" : num1 + ""), -scaleNumRect.width() / 2, -resultNumRect.height() + 40, scaleNumPaint);
                         //canvas.drawText( newFormatedValue, (-scaleNumRect.width() / 2) - 18 , -resultNumRect.height()+ 40, scaleNumPaint);
                     } else {
@@ -692,18 +693,18 @@ public class RNScrollRuler extends View {
                 } else {   //绘制小数刻度
                     if (prediectedValue == maxScale || prediectedValue == minScale) {
                         if (prediectedValue % (scaleLimit * 5) == 0) {
-                            canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
+                            canvas.drawLine(0, 25, 0, rulerBaseY, midScalePaint);
                         } else {
-                            canvas.drawLine(0, midScaleHeight + 45, 0, smallScaleHeight + 25, smallScalePaint);
+                            canvas.drawLine(0, rulerBaseY, 0, smallScaleHeight + 25, smallScalePaint);
                         }
                     } else if ((moveX >= 0 && rulerRight < moveX) || width / 2 - rulerRight < getWhichScalMovex(maxScale) - moveX) {
                         //当滑动出范围的话，不绘制，去除左右边界
                     } else {
                         //绘制小数刻度
                         if (prediectedValue % (scaleLimit * 5) == 0) {
-                            canvas.drawLine(0, 25, 0, midScaleHeight + 48, midScalePaint);
+                            canvas.drawLine(0, 25, 0, rulerBaseY, midScalePaint);
                         } else {
-                            canvas.drawLine(0, midScaleHeight + 45, 0, smallScaleHeight + 25, smallScalePaint);
+                            canvas.drawLine(0, rulerBaseY, 0, smallScaleHeight + 25, smallScalePaint);
                         }
                     }
                 }
@@ -716,7 +717,7 @@ public class RNScrollRuler extends View {
         canvas.restore();
         //绘制屏幕中间用来选中刻度的最大刻度
         //canvas.drawLine(width / 2, 0, width / 2, lagScaleHeight, lagScalePaint);
-        canvas.drawLine(width / 2, resultNumRect.height() - 180, width / 2, midScaleHeight + 48, lagScalePaint);
+        canvas.drawLine(width / 2, resultNumRect.height() - 180, width / 2, rulerBaseY, lagScalePaint);
     }
 
     public void drawTriangle(Canvas canvas, Paint paint, int x, int y, int width) {
