@@ -664,7 +664,13 @@ public class RNScrollRuler extends View {
         if (onChooseResulterListener != null) {
             onChooseResulterListener.onScrollResult(delegateValue); //接口不断回调给使用者结果值
         }
-        float rulerBaseY = rulerHeight-40;
+        float density = getResources().getDisplayMetrics().density;
+        float rulerBaseY = rulerHeight-(16*density);
+
+
+        Paint verticalLinePaint = new Paint();
+        verticalLinePaint.setStrokeWidth(1.42f*density);
+        verticalLinePaint.setColor(Color.parseColor(this.markerColor));
         //Log.d(TAG, " drawScaleAndNum: X: " + moveX);
         //绘制当前屏幕可见刻度,不需要裁剪屏幕,while循环只会执行·屏幕宽度/刻度宽度·次,大部分的绘制都是if(curDis<width)这样子内存暂用相对来说会比较高。。
         while (rulerRight < width) {
@@ -676,7 +682,7 @@ public class RNScrollRuler extends View {
 
                     //绘制刻度，绘制刻度数字
                     //canvas.drawLine(0, 0, 0, midScaleHeight, midScalePaint);
-                    canvas.drawLine(0, 25, 0, rulerBaseY, largerScalePaint);
+                    canvas.drawLine(0, 25, 0, rulerBaseY, smallScalePaint);
                     if (num1 == 0 && minScale == 0) {
                         scaleNumPaint.getTextBounds("0", 0, "0".length(), scaleNumRect);
                         canvas.drawText((isTime ? "0:00" : num1 + ""), -scaleNumRect.width() / 2, -resultNumRect.height() + 40, scaleNumPaint);
@@ -717,7 +723,7 @@ public class RNScrollRuler extends View {
         canvas.restore();
         //绘制屏幕中间用来选中刻度的最大刻度
         //canvas.drawLine(width / 2, 0, width / 2, lagScaleHeight, lagScalePaint);
-        canvas.drawLine(width / 2, resultNumRect.height() - 180, width / 2, rulerBaseY, lagScalePaint);
+        canvas.drawLine(width / 2, (float) resultNumRect.height() -  (51.45f * density), width / 2, rulerBaseY, verticalLinePaint);
     }
 
     public void drawTriangle(Canvas canvas, Paint paint, int x, int y, int width) {
@@ -762,7 +768,7 @@ public class RNScrollRuler extends View {
         //paint.setColor(getResources().getColor(R.color.result_text_color));
         paint.setColor(Color.parseColor(this.markerColor));
 
-        drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density), resultNumRect.height() - Math.round(36.36f * density), Math.round(54.54f * density));
+        drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density), resultNumRect.height() - Math.round(39.56f * density), Math.round(54.54f * density));
         //drawButtons(canvas,paint,0,-20, Math.round(40.0f*density),Math.round(resultNumRect.height() * density));
 
 
