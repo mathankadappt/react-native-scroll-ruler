@@ -253,9 +253,14 @@
                     }
                 }
                 //NSLog(@"%f",1/pow(10, tempInt));
-                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
                 
-                CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
+                NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
+                paragraphStyle.alignment = NSTextAlignmentRight;
+                
+                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"],
+                                            
+                                            NSParagraphStyleAttributeName: paragraphStyle
+                                            };
                 
                 CGFloat predictedX = startX+lineCenterX*i-width/2;
                 if(self.row == 0 && i == 0){
@@ -265,7 +270,7 @@
                     predictedX = ((startX+lineCenterX*i-width/2)-width/2);
                 }
                 
-                [num drawInRect:CGRectMake(predictedX , longLineY-14, width + 40, 16) withAttributes:attribute];
+                [num drawInRect:CGRectMake(predictedX  , longLineY-14, width , 16) withAttributes:attribute];
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
@@ -647,7 +652,7 @@
 }
 -(UILabel *)valueLab{
     if (!_valueLab) {
-        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-30, -20, 80, 40)];
+        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-45, -20, 110, 40)];
         _valueLab.textColor = [UIColor whiteColor];//[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
         
         //set the label to fit text content before rendered as a image
