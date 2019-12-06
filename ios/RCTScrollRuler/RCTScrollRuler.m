@@ -134,6 +134,11 @@
     CGContextSetLineWidth(context, 1);//设置线的宽度，
     CGContextSetLineCap(context, kCGLineCapButt);
     
+    int stepInt = (int)_step;
+    int skipValue = (_baseMinValue % (5*stepInt));
+    _minValue = _minValue - skipValue;
+    _maxValue = _maxValue - skipValue;
+    
     if(isTime == true){
         
         for (int i = 0; i <= _betweenNumber; i ++){
@@ -142,6 +147,9 @@
             int tempInt = (int)(i * _step) + _minValue;
             if(tempInt > _totalMaxValue){
                 return;
+            }
+            if(tempInt < _baseMinValue){
+                continue;
             }
             if (tempInt%10 == 0){
                 
@@ -185,6 +193,8 @@
         }
     }else{
         
+       
+        
         for (int i = 0; i <= _betweenNumber * _step ; i = i+1 ){
             
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
@@ -192,7 +202,10 @@
             if(tempInt > _totalMaxValue){
                 return;
             }
-            int stepInt = (int)_step;
+            if(tempInt < _baseMinValue){
+                continue;
+            }
+            
             
             if ((tempInt%(_betweenNumber*stepInt) == 0)){
                 
@@ -244,12 +257,12 @@
                 
                 CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
                 
-                CGFloat predictedX = startX+lineCenterX*i-width/2 - 3;
+                CGFloat predictedX = startX+lineCenterX*i-width/2;
                 if(self.row == 0 && i == 0){
                     predictedX = (startX+lineCenterX*i-width/2)+width/2;
                 }
                 else if(self.row == self.totalRows-1 && i > 0 ){
-                    predictedX = ((startX+lineCenterX*i-width/2)-width/2)+ 10;
+                    predictedX = ((startX+lineCenterX*i-width/2)-width/2);
                 }
                 
                 [num drawInRect:CGRectMake(predictedX , longLineY-14, width + 40, 16) withAttributes:attribute];
@@ -378,11 +391,8 @@
 @end
 @implementation RCTScrollRuler
 
-- (void)setMinValue:(int)minValue {
-    
+-(void)reconfigureValues{
     [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
-    _minValue = minValue;
-    
     _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
     _bgColor    = [UIColor greenColor];
     _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
@@ -397,95 +407,43 @@
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
 }
+- (void)setMinValue:(int)minValue {
+    _minValue = minValue;
+    [self reconfigureValues];
+    
+}
 
 - (void)setMaxValue:(int)maxValue {
     
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _maxValue = maxValue;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum+1;
-    _bgColor    = [UIColor clearColor];
-    _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor clearColor];
-    
-    // [self addSubview:self.valueLab];
-    [self addSubview:self.unitLab];
-    [self addSubview:self.collectionView];
-    [self addSubview:self.triangle];
-    // [self addSubview:self.grayLine];
-    [self setDefaultValue:_defaultValue];
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
-    [self addSubview:self.valueLab];
+    [self reconfigureValues];
 }
 
 - (void)setIsTime:(BOOL)isTime {
     
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _isTime = isTime;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
-    _bgColor    = [UIColor clearColor];
-    _triangleColor         = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor clearColor];
+    [self reconfigureValues];
     
-    //[self addSubview:self.valueLab];
-    [self addSubview:self.unitLab];
-    [self addSubview:self.collectionView];
-    [self addSubview:self.triangle];
-    // [self addSubview:self.grayLine];
-    [self setDefaultValue:_defaultValue];
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
-    [self addSubview:self.valueLab];
 }
 
 - (void)setMarkerColor:(NSString *)markerColor{
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
+   
     
     _markerColor = markerColor;
     
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
-    _bgColor    = [UIColor clearColor];
-    
-    _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor clearColor];
-    
-    //[self addSubview:self.valueLab];
-    [self addSubview:self.unitLab];
-    [self addSubview:self.collectionView];
-    [self addSubview:self.triangle];
-    // [self addSubview:self.grayLine];
-    [self setDefaultValue:_defaultValue];
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
+    [self reconfigureValues];
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
-    //self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
-    //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
     _triangle.triangleColor     = [UIColor orangeColor];
     [self addTriangleTipToLayer:_valueLab.layer];
     [self bringSubviewToFront:_valueLab];
-    [self addSubview:self.valueLab];
+    
 }
 
 
 - (void)setMarkerTextColor:(NSString *)markerTextColor{
     
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
-    
     _markerTextColor = markerTextColor;
-    
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
-    _bgColor    = [UIColor clearColor];
-    _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor clearColor];
-    
-    // [self addSubview:self.valueLab];
-    [self addSubview:self.unitLab];
-    [self addSubview:self.collectionView];
-    [self addSubview:self.triangle];
-    // [self addSubview:self.grayLine];
-    [self setDefaultValue:_defaultValue];
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
+    [self reconfigureValues];
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
     //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
@@ -494,28 +452,17 @@
 }
 
 - (void)setStep:(float)step {
-    
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _step = step;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
-    _bgColor    = [UIColor clearColor];
-    _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor clearColor];
-    
-    // [self addSubview:self.valueLab];
-    [self addSubview:self.unitLab];
-    [self addSubview:self.collectionView];
-    [self addSubview:self.triangle];
-    // [self addSubview:self.grayLine];
-    [self setDefaultValue:_defaultValue];
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
-    [self addSubview:self.valueLab];
+    [self reconfigureValues];
 }
 
 - (void)setDefaultValue:(int)defaultValue {
     
-    _defaultValue      = defaultValue;
+    _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
+    [self setRealValue:_defaultValue];
+    [_collectionView setContentOffset:CGPointMake(((_defaultValue)/(float)_step)*RulerGap, 0) animated:YES];
+ 
+    /* _defaultValue      = defaultValue;
     if (_maxValue != 0) {
         if(_minValue > defaultValue){
             
@@ -528,7 +475,7 @@
             [self setRealValue:defaultValue];
             [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
         }
-    }
+    }*/
     //NSLog(@"setDefaultValue被调用了，defaultValue=%.2f", defaultValue);
 }
 
@@ -539,57 +486,18 @@
 
 
 - (void)setNum:(float)num {
-    //NSLog(@"设置间隔");
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _num = num;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
-    _bgColor    = [UIColor clearColor];
-    //_triangleColor         = [UIColor yellowColor];// //_triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor clearColor];
-    
-    //[self addSubview:self.valueLab];
-    // [self addSubview:self.unitLab];
-    [self addSubview:self.collectionView];
-    //[self addSubview:self.triangle];
-    //[self addSubview:self.grayLine];
-    [self setDefaultValue:_defaultValue];
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
-    [self addSubview:self.valueLab];
+    [self reconfigureValues];
 }
 
 - (void)setBetweenNum:(NSInteger)betweenNum{
-    
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _betweenNum = betweenNum;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
-    _bgColor    = [UIColor clearColor];
-    self.backgroundColor    = [UIColor clearColor];
-    [self addSubview:self.collectionView];
-    [self setDefaultValue:_defaultValue];
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
-    [self addSubview:self.valueLab];
+    [self reconfigureValues];
 }
 
 - (void)setUnit:(NSString *)unit {
-    //NSLog(@"设置单位");
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
     _unit = unit;
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum;
-    _bgColor    = [UIColor clearColor];
-    //_triangleColor         = [UIColor redColor];// = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor clearColor];
-    
-    //[self addSubview:self.valueLab];
-    // [self addSubview:self.unitLab];
-    [self addSubview:self.collectionView];
-    //[self addSubview:self.triangle];
-    //[self addSubview:self.grayLine];
-    [self setDefaultValue:_defaultValue];
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
-    [self addSubview:self.valueLab];
+    [self reconfigureValues];
 }
 
 -(float)calculateExponentValue:(int)exp{
@@ -940,6 +848,9 @@
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
     //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
+    int skipValue = (_minValue % (5*_step));
+    value = value -skipValue;
+
     int totalValue = value*_step +_minValue;
     [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
