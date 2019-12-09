@@ -560,6 +560,7 @@ public class RNScrollRuler extends View {
     }
 
     private void drawScaleAndNum(Canvas canvas) {
+        Log.d(TAG, "drawScaleAndNum: -----------H:  "+resultNumRect.height());
         canvas.translate(0, (showScaleResult ? resultNumRect.height() : 0) + rulerToResultgap);//移动画布到结果值的下面
 
         // 先画横线
@@ -666,6 +667,7 @@ public class RNScrollRuler extends View {
         }
         float density = getResources().getDisplayMetrics().density;
         float rulerBaseY = rulerHeight-(16*density);
+        Log.d("RULLER","==========>"+rulerBaseY+", rulerHeight:"+rulerHeight);
 
 
         Paint verticalLinePaint = new Paint();
@@ -723,7 +725,7 @@ public class RNScrollRuler extends View {
         canvas.restore();
         //绘制屏幕中间用来选中刻度的最大刻度
         //canvas.drawLine(width / 2, 0, width / 2, lagScaleHeight, lagScalePaint);
-        canvas.drawLine(width / 2, (float) resultNumRect.height() -  (51.45f * density), width / 2, rulerBaseY, verticalLinePaint);
+        canvas.drawLine(width / 2, (float) resultNumRect.height() -  (56.45f * density), width / 2, rulerBaseY, verticalLinePaint);
     }
 
     public void drawTriangle(Canvas canvas, Paint paint, int x, int y, int width) {
@@ -768,7 +770,7 @@ public class RNScrollRuler extends View {
         //paint.setColor(getResources().getColor(R.color.result_text_color));
         paint.setColor(Color.parseColor(this.markerColor));
 
-        drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density), resultNumRect.height() - Math.round(39.56f * density), Math.round(54.54f * density));
+        drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density), resultNumRect.height() - Math.round(36.56f * density), Math.round(54.54f * density));
         //drawButtons(canvas,paint,0,-20, Math.round(40.0f*density),Math.round(resultNumRect.height() * density));
 
 
@@ -811,9 +813,13 @@ public class RNScrollRuler extends View {
     }
 
     private void drawBg(Canvas canvas) {
-        bgRect.set(0, 0, width, height);
+        float density = getResources().getDisplayMetrics().density;
+        int diff = resultNumRect.height() - Math.round(16*density);
+        //diff = diff < 0 ? 0 : diff;
+        Log.d(TAG, "drawBg: <<<<<<<<<<<<<"+diff);
+        bgRect.set(0, diff, width, height+diff);
         if (isBgRoundRect) {
-            canvas.drawRoundRect(bgRect, 20, 20, bgPaint); //20->椭圆的用于圆形角x-radius
+            canvas.drawRoundRect(bgRect, 0, 0, bgPaint); //20->椭圆的用于圆形角x-radius
         } else {
             canvas.drawRect(bgRect, bgPaint);
         }
