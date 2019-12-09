@@ -674,7 +674,7 @@ typedef enum SCROLL_DIRECTION{
         [_leftScrollBtn setBackgroundColor:[UIColor orangeColor]];
         UIImage *leftBtnImage = [UIImage imageNamed:@"minus.png"];
         [_leftScrollBtn setImage:leftBtnImage forState:UIControlStateNormal];
-        UIImage *rightBtnImage = [UIImage imageNamed:@"Plus_icon.png"];
+        UIImage *rightBtnImage = [UIImage imageNamed:@"plus_icon.png"];
         [_rightScrollBtn setImage:rightBtnImage forState:UIControlStateNormal];
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(voiceOverStatusChanged)
@@ -815,7 +815,7 @@ typedef enum SCROLL_DIRECTION{
 {
     
     
-    return 2+_stepNum;
+    return 3+_stepNum;
 }
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
@@ -1069,7 +1069,7 @@ typedef enum SCROLL_DIRECTION{
 -(int)getContentOffset:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
     int skipValue = (_minValue % (5*_step));
-    return  value - skipValue;
+    return  value - 0;
     
 }
 
