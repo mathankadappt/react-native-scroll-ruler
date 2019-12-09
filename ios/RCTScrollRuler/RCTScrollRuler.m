@@ -193,7 +193,7 @@
         }
     }else{
         
-       
+        
         
         for (int i = 0; i <= _betweenNumber * _step ; i = i+1 ){
             
@@ -253,14 +253,9 @@
                     }
                 }
                 //NSLog(@"%f",1/pow(10, tempInt));
+                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
                 
-                NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
-                paragraphStyle.alignment = NSTextAlignmentRight;
-                
-                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"],
-                                            
-                                            NSParagraphStyleAttributeName: paragraphStyle
-                                            };
+                CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
                 
                 CGFloat predictedX = startX+lineCenterX*i-width/2;
                 if(self.row == 0 && i == 0){
@@ -270,7 +265,7 @@
                     predictedX = ((startX+lineCenterX*i-width/2)-width/2);
                 }
                 
-                [num drawInRect:CGRectMake(predictedX  , longLineY-14, width , 16) withAttributes:attribute];
+                [num drawInRect:CGRectMake(predictedX , longLineY-14, width + 40, 16) withAttributes:attribute];
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
                 CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
                 CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
@@ -368,6 +363,11 @@
 
 /***************DY************分************割************线***********/
 
+typedef enum SCROLL_DIRECTION{
+    DIRECTION_LEFT,
+    DIRECTION_RIGHT,
+}SCROLL_DIRECTION;
+
 @interface RCTScrollRuler()<UIScrollViewDelegate,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout>
 
 @property(nonatomic, strong)UILabel         *valueLab;
@@ -393,6 +393,10 @@
 @property(nonatomic, assign)int previousRealValue;
 @property (nonatomic, strong)AVAudioPlayer *audioPlayer;
 
+@property(nonatomic, strong)UIButton *leftScrollBtn;
+@property(nonatomic, strong)UIButton *rightScrollBtn;
+@property(nonatomic, strong)NSTimer *timer;
+@property(nonatomic, assign) SCROLL_DIRECTION direction;
 @end
 @implementation RCTScrollRuler
 
@@ -406,8 +410,13 @@
     //[self addSubview:self.unitLab];
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
+    if(UIAccessibilityIsVoiceOverRunning() == YES)
+    {
+        [self addSubview:_leftScrollBtn];
+        [self addSubview:_rightScrollBtn];
+    }
     //[self addSubview:self.grayLine];
-    [self setDefaultValue:_defaultValue];
+    
     [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
@@ -428,11 +437,12 @@
     
     _isTime = isTime;
     [self reconfigureValues];
+    [self setDefaultValue:_defaultValue];
     
 }
 
 - (void)setMarkerColor:(NSString *)markerColor{
-   
+    
     
     _markerColor = markerColor;
     
@@ -463,25 +473,19 @@
 
 - (void)setDefaultValue:(int)defaultValue {
     
+    /*
+     T = ( V * S ) + M
+     T-M = V * S
+     T-M/S = V
+     */
+    
     _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
-    [self setRealValue:_defaultValue];
-    [_collectionView setContentOffset:CGPointMake(((_defaultValue)/(float)_step)*RulerGap, 0) animated:YES];
- 
-    /* _defaultValue      = defaultValue;
-    if (_maxValue != 0) {
-        if(_minValue > defaultValue){
-            
-            defaultValue = (_maxValue  + _minValue)/2;// + _step;
-            
-            [self setRealValue:defaultValue];
-            NSLog(@"%f",((defaultValue)/(float)_step) * RulerGap );
-            [_collectionView setContentOffset:CGPointMake(((defaultValue)/(float)_step)*RulerGap, 0) animated:YES];
-        }else{
-            [self setRealValue:defaultValue];
-            [_collectionView setContentOffset:CGPointMake(((defaultValue-_minValue)/(float)_step)*RulerGap, 0) animated:YES];
-        }
-    }*/
-    //NSLog(@"setDefaultValue被调用了，defaultValue=%.2f", defaultValue);
+    int value = ((_defaultValue - _minValue) / _step);
+    int skipValue = (_minValue % (5*_step));
+    value = value + skipValue;
+    [self setRealValue:value];
+    
+    
 }
 
 - (void)setExponentValue:(int)exponent {
@@ -547,6 +551,7 @@
         //[self addSubview:self.unitLab];
         [self addSubview:self.collectionView];
         [self addSubview:self.triangle];
+        [self setupAccessabilityButton];
         //[self addSubview:self.grayLine];
         self.unitLab.text = _unit;
         [self addSubview:self.valueLab];
@@ -630,6 +635,14 @@
     }
     return _triangle;
 }
+- (void)voiceOverStatusChanged
+{
+    //if(!    ())
+    {
+        //do your changes
+        NSLog(@"ACCESSIBILTY: %@",UIAccessibilityIsVoiceOverRunning());
+    }
+}
 -(UICollectionView *)collectionView{
     if (!_collectionView) {
         UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc]init];
@@ -647,12 +660,75 @@
         [_collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"headCell"];
         [_collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"footerCell"];
         [_collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"custemCell"];
+        
     }
     return _collectionView;
 }
+
+-(void)setupAccessabilityButton {
+    if(UIAccessibilityIsVoiceOverRunning() == YES)
+    {
+        _leftScrollBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 30, 50, _collectionView.frame.size.height + 0)];
+        _rightScrollBtn = [[UIButton alloc]initWithFrame:CGRectMake((self.bounds.size.width+20) - 50, 30, 50, _collectionView.frame.size.height)];
+        [_rightScrollBtn setBackgroundColor:[UIColor orangeColor]];
+        [_leftScrollBtn setBackgroundColor:[UIColor orangeColor]];
+        UIImage *leftBtnImage = [UIImage imageNamed:@"minus.png"];
+        [_leftScrollBtn setImage:leftBtnImage forState:UIControlStateNormal];
+        UIImage *rightBtnImage = [UIImage imageNamed:@"Plus_icon.png"];
+        [_rightScrollBtn setImage:rightBtnImage forState:UIControlStateNormal];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(voiceOverStatusChanged)
+                                                     name:UIAccessibilityVoiceOverStatusChanged
+                                                   object:nil];
+        //stopTimer
+        //_timer = [NSTimer timerWithTimeInterval:(x) target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
+        
+        [_rightScrollBtn addTarget:self action:@selector(repeatLeft:) forControlEvents:UIControlEventTouchDown];
+        [_leftScrollBtn addTarget:self action:@selector(repeatRight:) forControlEvents:UIControlEventTouchDown];
+        
+        [_rightScrollBtn addTarget:self action:@selector(stopTimer:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+        [_leftScrollBtn addTarget:self action:@selector(stopTimer:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+    }
+}
+
+-(void)invalidateTimer{
+    if(_timer && [_timer isValid]){
+        [_timer invalidate];
+    }
+}
+-(void)scheduleTimer{
+    [self invalidateTimer];
+    _timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(scrollCollectionView) userInfo:nil repeats:YES];
+    [_timer fire];
+}
+-(void)repeatRight:(id)sender{
+    _direction = DIRECTION_RIGHT;
+    [self scheduleTimer];
+}
+
+-(void)stopTimer:(id)sender{
+    [self invalidateTimer];
+}
+
+-(void)repeatLeft:(id)sender{
+    _direction = DIRECTION_LEFT;
+    [self scheduleTimer];
+}
+
+- (void)scrollCollectionView
+{
+    CGPoint cx = self.collectionView.contentOffset;
+    cx.x = _direction == DIRECTION_LEFT ? cx.x + RulerGap : cx.x - RulerGap;
+    [self.collectionView setContentOffset:cx animated:NO];
+    
+    
+    
+}
+
+
 -(UILabel *)valueLab{
     if (!_valueLab) {
-        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-45, -20, 110, 40)];
+        _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-30, -20, 80, 40)];
         _valueLab.textColor = [UIColor whiteColor];//[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
         
         //set the label to fit text content before rendered as a image
@@ -726,8 +802,8 @@
         _unitLab.hidden = NO;
         //_valueLab.text = [NSString stringWithFormat:@"%d", n];
     }
-    int initalPadding = realValue == 0 ? 0: 0;
-    [_collectionView setContentOffset:CGPointMake((realValue*RulerGap)+initalPadding, 0) animated:animated];
+    //int initalPadding = realValue == 0 ? 0: 0;
+    [_collectionView setContentOffset:CGPointMake((realValue*RulerGap), 0) animated:animated];
 }
 
 +(CGFloat)rulerViewHeight{
@@ -855,7 +931,7 @@
     //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
     int skipValue = (_minValue % (5*_step));
     value = value -skipValue;
-
+    
     int totalValue = value*_step +_minValue;
     [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
@@ -870,6 +946,14 @@
     }
     _scrollByHand = YES;
     if (_scrollByHand) {
+        
+        if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
+            if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+                NSLog(@"total value2:%d",totalValue);
+                [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+                
+            }
+        }
         if(_isTime == true){
             if (totalValue >= _maxValue) {
                 int minutes =  floor(_maxValue / 60);
@@ -982,52 +1066,64 @@
     }
 }
 
+-(int)getContentOffset:(UIScrollView *)scrollView{
+    int value = scrollView.contentOffset.x/RulerGap;
+    int skipValue = (_minValue % (5*_step));
+    return  value - skipValue;
+    
+}
+
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{//拖拽时没有滑动动画
     if (!decelerate){
         [self setRealValue:round(scrollView.contentOffset.x/(RulerGap)) animated:YES];
-        int value = scrollView.contentOffset.x/RulerGap;
         //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
-        int totalValue = value*_step +_minValue;
-        //[self playAudio:totalValue];
-        if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
-            if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-                [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
-                
-            }
-        }
+        /*int value = [self getContentOffset:scrollView];
+         int totalValue = value*_step +_minValue;
+         //[self playAudio:totalValue];
+         if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
+         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+         NSLog(@"total value1:%d",totalValue);
+         [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+         
+         }
+         }*/
     }
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView{
     
-    int value = scrollView.contentOffset.x/RulerGap;
-    [self setRealValue:round(value) animated:YES];
+    int value = [self getContentOffset:scrollView];
+    
+    [self setRealValue:round(value) animated:NO];
     //int value = scrollView.contentOffset.x/RulerGap;
     //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
-    int totalValue = value*_step +_minValue;
-    //[self playAudio:totalValue];
-    if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
-        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-            [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
-            
-        }
-    }
+    /*int totalValue = value*_step +_minValue;
+     //[self playAudio:totalValue];
+     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
+     if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+     NSLog(@"total value2:%d",totalValue);
+     [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+     
+     }
+     }*/
 }
 
 
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
-    int value = scrollView.contentOffset.x/RulerGap;
+    int value = [self getContentOffset:scrollView];
+    
     [self setRealValue:round(value) animated:YES];
     //int value = scrollView.contentOffset.x/RulerGap;
     //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
-    int totalValue = value*_step +_minValue;
-    //[self playAudio:totalValue];
-    if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
-        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-            [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
-            
-        }
-    }
+    /*int totalValue = value*_step +_minValue;
+     //[self playAudio:totalValue];
+     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
+     if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+     NSLog(@"total value3:%d",totalValue);
+     [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+     
+     }
+     }*/
 }
 
 -(BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView{
