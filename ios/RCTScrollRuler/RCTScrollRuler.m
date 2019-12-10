@@ -396,6 +396,7 @@ typedef enum SCROLL_DIRECTION{
 @property(nonatomic, strong)UIButton *leftScrollBtn;
 @property(nonatomic, strong)UIButton *rightScrollBtn;
 @property(nonatomic, strong)NSTimer *timer;
+@property(nonatomic, assign)int    currentValue;
 @property(nonatomic, assign) SCROLL_DIRECTION direction;
 @end
 @implementation RCTScrollRuler
@@ -924,6 +925,16 @@ typedef enum SCROLL_DIRECTION{
     }
 }
 
+-(void)triggerSelectedValue{
+   
+    if((_currentValue >= _minValue)&&(_currentValue <= _maxValue)){
+        if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
+            NSLog(@"total value2:%d",_currentValue);
+            [self.delegate dyScrollRulerView:self valueChange:_currentValue exponent:_exponent exponentFValue:_exponentFloatValue];
+            
+        }
+    }
+}
 
 #pragma mark -UIScrollViewDelegate
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
@@ -946,14 +957,10 @@ typedef enum SCROLL_DIRECTION{
     }
     _scrollByHand = YES;
     if (_scrollByHand) {
+         if((_currentValue >= _minValue)&&(_currentValue <= _maxValue)){
+             _currentValue = totalValue;
+         }
         
-        if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
-            if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-                NSLog(@"total value2:%d",totalValue);
-                [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
-                
-            }
-        }
         if(_isTime == true){
             if (totalValue >= _maxValue) {
                 int minutes =  floor(_maxValue / 60);
@@ -1076,6 +1083,7 @@ typedef enum SCROLL_DIRECTION{
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{//拖拽时没有滑动动画
     if (!decelerate){
         [self setRealValue:round(scrollView.contentOffset.x/(RulerGap)) animated:YES];
+        [self triggerSelectedValue];
         //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
         /*int value = [self getContentOffset:scrollView];
          int totalValue = value*_step +_minValue;
@@ -1095,6 +1103,7 @@ typedef enum SCROLL_DIRECTION{
     int value = [self getContentOffset:scrollView];
     
     [self setRealValue:round(value) animated:NO];
+    [self triggerSelectedValue];
     //int value = scrollView.contentOffset.x/RulerGap;
     //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
     /*int totalValue = value*_step +_minValue;
@@ -1113,6 +1122,7 @@ typedef enum SCROLL_DIRECTION{
     int value = [self getContentOffset:scrollView];
     
     [self setRealValue:round(value) animated:YES];
+    [self triggerSelectedValue];
     //int value = scrollView.contentOffset.x/RulerGap;
     //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
     /*int totalValue = value*_step +_minValue;
