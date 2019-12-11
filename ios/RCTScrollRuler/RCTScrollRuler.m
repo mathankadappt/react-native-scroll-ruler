@@ -50,21 +50,6 @@
     //    CGContextBeginPath(context);//标记
     
     CGContextMoveToPoint(context, rect.size.width, 0);
-    
-    //        CGContextAddLineToPoint(context, TrangleWidth, 0);
-    //
-    //        CGContextAddLineToPoint(context, TrangleWidth/2.0, TrangleWidth/2.0);
-    //        CGContextSetLineCap(context, kCGLineCapButt);//线结束时是否绘制端点，该属性不设置。有方形，圆形，自然结束3中设置
-    //        CGContextSetLineJoin(context, kCGLineJoinBevel);//线交叉时设置缺角。有圆角，尖角，缺角3中设置
-    //
-    //        CGContextClosePath(context);//路径结束标志，不写默认封闭
-    
-    // [_triangleColor setFill];//设置填充色
-    // [_triangleColor setStroke];//设置边框色
-    //        CGContextSetStrokeColorWithColor(context, [UIColor greenColor].CGColor);
-    //        CGContextSetStrokeColorWithColor(context, [UIColor greenColor].CGColor);
-    //        CGContextDrawPath(context, kCGPathFillStroke);//绘制路径path，后属性表示填充
-    //
     CGContextAddLineToPoint(context, rect.size.width, rect.size.height);
     CGContextStrokePath(context);//开始绘制
 }
@@ -135,7 +120,7 @@
     CGContextSetLineCap(context, kCGLineCapButt);
     
     int stepInt = (int)_step;
-    int skipValue = (_baseMinValue % (5*stepInt));
+    int skipValue = (_baseMinValue % (10*stepInt));
     _minValue = _minValue - skipValue;
     _maxValue = _maxValue - skipValue;
     
@@ -480,11 +465,13 @@ typedef enum SCROLL_DIRECTION{
      T-M/S = V
      */
     
-    _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
-    int value = ((_defaultValue - _minValue) / _step);
     int skipValue = (_minValue % (5*_step));
-    value = value + skipValue;
-    [self setRealValue:value];
+    _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
+    int value = roundf((float)(_defaultValue - _minValue + skipValue ) / (float)_step);
+    
+    //value = value;
+     [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:NO];
+    //[self setRealValue:value];
     
     
 }
@@ -512,8 +499,6 @@ typedef enum SCROLL_DIRECTION{
 
 -(float)calculateExponentValue:(int)exp{
     
-    //NSLog(@"%f",pow(10, exp));
-    //return 1/pow(10, exp);
     if(exp == 1){
         return 0.1;
     }else if (exp == 2){
@@ -732,26 +717,7 @@ typedef enum SCROLL_DIRECTION{
         _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-30, -20, 80, 40)];
         _valueLab.textColor = [UIColor whiteColor];//[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
         
-        //set the label to fit text content before rendered as a image
-        //[_valueLab sizeToFit];
-        
-        //        UIBezierPath* trianglePath = [UIBezierPath bezierPath];
-        //        [trianglePath moveToPoint:CGPointMake(_valueLab.frame.size.height, _valueLab.frame.size.height)];
-        //        [trianglePath addLineToPoint:CGPointMake(_valueLab.frame.size.width/4,_valueLab.frame.size.height)];
-        //        [trianglePath addLineToPoint:CGPointMake(_valueLab.frame.size.width/4,_valueLab.frame.size.width - 10.0f)];
-        //
-        //        //Draw Line
-        ////        [trianglePath addLineToPoint:CGPointMake(120.0f,200.0f)];
-        ////        [trianglePath addLineToPoint:CGPointMake(100.0f,250.0f)];
-        ////        [trianglePath addLineToPoint:CGPointMake(80.0f,200.0f)];
-        ////
-        ////        [trianglePath addLineToPoint:CGPointMake(0.0f,200.0f)];
-        //
-        //        CAShapeLayer *triangleMaskLayer = [CAShapeLayer layer];
-        //        triangleMaskLayer.fillColor = [UIColor blueColor].CGColor;
-        //        [triangleMaskLayer setPath:trianglePath.CGPath];
-        //
-        //        [_valueLab.layer addSublayer:triangleMaskLayer];
+       
         if(![_markerColor isEqualToString:@"0"]){
             _valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];;
             //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
@@ -814,12 +780,12 @@ typedef enum SCROLL_DIRECTION{
 #pragma mark UICollectionViewDataSource & Delegate
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    
-    
-    return 3+_stepNum;
+    return 2+_stepNum + [self skippingValue];
 }
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
+    int newcount = _stepNum ;
+    NSLog(@"--- STEP ---%d",newcount);
     if (indexPath.item == 0){
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"headCell" forIndexPath:indexPath];
         DYHeaderRulerView *headerView = [cell.contentView viewWithTag:1000];
@@ -833,7 +799,7 @@ typedef enum SCROLL_DIRECTION{
         }
         return cell;
         
-    }else if( indexPath.item == _stepNum +1){
+    }else if( indexPath.item == newcount +1){
         
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"footerCell" forIndexPath:indexPath];
         DYFooterRulerView *footerView = [cell.contentView viewWithTag:1001];
@@ -940,10 +906,13 @@ typedef enum SCROLL_DIRECTION{
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
     //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
-    int skipValue = (_minValue % (5*_step));
-    value = value -skipValue;
     
-    int totalValue = value*_step +_minValue;
+    //value = value -skipValue;
+    int skipValue = (_minValue % (5*_step));
+    int totalValue = value*_step + (_minValue - skipValue);
+    
+    //totalValue -= skipValue;
+    
     [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
@@ -952,7 +921,11 @@ typedef enum SCROLL_DIRECTION{
         }
     }else{
         if(totalValue > _maxValue){
-            [scrollView setContentOffset:CGPointMake((_maxValue - _minValue) * RulerGap / _step, 0) animated:NO];
+            int maxValue = (((_maxValue-_minValue)+[self skippingValue]) * RulerGap ) / _step;
+            [scrollView setContentOffset:CGPointMake(maxValue, 0) animated:NO];
+        }
+        else  if(totalValue < _minValue){
+            [scrollView setContentOffset:CGPointMake((_minValue * RulerGap)/_step, 0) animated:NO];
         }
     }
     _scrollByHand = YES;
@@ -979,8 +952,8 @@ typedef enum SCROLL_DIRECTION{
                 }
             }else{
                 
-                int minutes =  floor((value + _minValue)/ 60);
-                int seconds = (value + _minValue) - minutes * 60;
+                int minutes =  floor(totalValue/ 60);
+                int seconds = totalValue - minutes * 60;
                 NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
                 _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
                 
@@ -1047,7 +1020,7 @@ typedef enum SCROLL_DIRECTION{
                 if(_exponent > 0){
                     NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
                     
-                    NSString *floatStr = [NSString stringWithFormat:formatStr,(value*_step) * _exponentFloatValue + _minValue * _exponentFloatValue];
+                    NSString *floatStr = [NSString stringWithFormat:formatStr,totalValue * _exponentFloatValue];
                     
                     floatStr = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
                     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
@@ -1063,7 +1036,7 @@ typedef enum SCROLL_DIRECTION{
                     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
                     [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
                     [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:(value*_step)  +_minValue]];
+                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:totalValue]];
                     _valueLab.text = formatted;
                 }
             }
@@ -1073,8 +1046,11 @@ typedef enum SCROLL_DIRECTION{
     }
 }
 
+-(int)skippingValue{
+    return (_minValue % (5*_step));
+}
 -(int)getContentOffset:(UIScrollView *)scrollView{
-    int value = scrollView.contentOffset.x/RulerGap;
+    int value = scrollView.contentOffset.x/(float)RulerGap;
     int skipValue = (_minValue % (5*_step));
     return  value - 0;
     
@@ -1082,19 +1058,9 @@ typedef enum SCROLL_DIRECTION{
 
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{//拖拽时没有滑动动画
     if (!decelerate){
-        [self setRealValue:round(scrollView.contentOffset.x/(RulerGap)) animated:YES];
+          int value = [self getContentOffset:scrollView];
+        [self setRealValue:value animated:YES];
         [self triggerSelectedValue];
-        //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
-        /*int value = [self getContentOffset:scrollView];
-         int totalValue = value*_step +_minValue;
-         //[self playAudio:totalValue];
-         if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
-         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-         NSLog(@"total value1:%d",totalValue);
-         [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
-         
-         }
-         }*/
     }
 }
 
@@ -1104,17 +1070,7 @@ typedef enum SCROLL_DIRECTION{
     
     [self setRealValue:round(value) animated:NO];
     [self triggerSelectedValue];
-    //int value = scrollView.contentOffset.x/RulerGap;
-    //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
-    /*int totalValue = value*_step +_minValue;
-     //[self playAudio:totalValue];
-     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
-     if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-     NSLog(@"total value2:%d",totalValue);
-     [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
-     
-     }
-     }*/
+   
 }
 
 
@@ -1123,17 +1079,7 @@ typedef enum SCROLL_DIRECTION{
     
     [self setRealValue:round(value) animated:YES];
     [self triggerSelectedValue];
-    //int value = scrollView.contentOffset.x/RulerGap;
-    //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
-    /*int totalValue = value*_step +_minValue;
-     //[self playAudio:totalValue];
-     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
-     if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-     NSLog(@"total value3:%d",totalValue);
-     [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
-     
-     }
-     }*/
+    
 }
 
 -(BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView{
