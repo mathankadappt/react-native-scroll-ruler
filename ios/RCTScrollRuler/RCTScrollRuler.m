@@ -465,7 +465,7 @@ typedef enum SCROLL_DIRECTION{
      T-M/S = V
      */
     
-    int skipValue = (_minValue % (5*_step));
+    int skipValue = (_minValue % (10*_step));
     _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
     int value = roundf((float)(_defaultValue - _minValue + skipValue ) / (float)_step);
     
@@ -500,17 +500,17 @@ typedef enum SCROLL_DIRECTION{
 -(float)calculateExponentValue:(int)exp{
     
     if(exp == 1){
-        return 0.1;
+        return 0.10f;
     }else if (exp == 2){
-        return 0.01;
+        return 0.010f;
     }else if (exp == 3){
-        return 0.001;
+        return 0.0010f;
     }else if (exp == 4){
-        return 0.0001;
+        return 0.00010f;
     }else if (exp == 5){
-        return 0.00001;
+        return 0.000010f;
     }
-    return 0.1;
+    return 0.10f;
 }
 
 
@@ -716,7 +716,7 @@ typedef enum SCROLL_DIRECTION{
     if (!_valueLab) {
         _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-30, -20, 80, 40)];
         _valueLab.textColor = [UIColor whiteColor];//[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
-        
+        _valueLab.adjustsFontSizeToFitWidth = YES;
        
         if(![_markerColor isEqualToString:@"0"]){
             _valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];;
@@ -770,7 +770,23 @@ typedef enum SCROLL_DIRECTION{
         //_valueLab.text = [NSString stringWithFormat:@"%d", n];
     }
     //int initalPadding = realValue == 0 ? 0: 0;
-    [_collectionView setContentOffset:CGPointMake((realValue*RulerGap), 0) animated:animated];
+    
+    //[_collectionView setContentOffset:CGPointMake((realValue*RulerGap), 0) animated:animated];
+    [self scrollToExactPosition];
+}
+
+-(void)scrollToExactPosition{
+    int offset = _collectionView.contentOffset.x;
+    int value = _collectionView.contentOffset.x/RulerGap;
+    //[Pull request test]
+    //value = value -skipValue;
+    int skipValue = (_minValue % (10*_step));
+    int totalValue = value*_step + (_minValue-skipValue);
+    //int maxValue = skipValue/_step * RulerGap;
+    //(((skipValue)) * RulerGap ) / _step;
+    int maxValue = (((totalValue-_minValue+skipValue)) * RulerGap ) / _step;
+    [_collectionView setContentOffset:CGPointMake(maxValue, 0) animated:NO];
+    
 }
 
 +(CGFloat)rulerViewHeight{
@@ -904,15 +920,16 @@ typedef enum SCROLL_DIRECTION{
 
 #pragma mark -UIScrollViewDelegate
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    int offset = scrollView.contentOffset.x;
     int value = scrollView.contentOffset.x/RulerGap;
     //[Pull request test]
     //value = value -skipValue;
-    int skipValue = (_minValue % (5*_step));
-    int totalValue = value*_step + (_minValue - skipValue);
+    int skipValue = (_minValue % (10*_step));
+    int totalValue = value*_step + (_minValue-skipValue);
     
     //totalValue -= skipValue;
     
-    [self playAudio:totalValue];
+        [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
             //  [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
@@ -920,26 +937,31 @@ typedef enum SCROLL_DIRECTION{
         }
     }else{
         if(totalValue > _maxValue){
-            int maxValue = (((_maxValue-_minValue)+[self skippingValue]) * RulerGap ) / _step;
+            int maxValue = (((_maxValue-_minValue+skipValue)) * RulerGap ) / _step;
             [scrollView setContentOffset:CGPointMake(maxValue, 0) animated:NO];
         }
         else  if(totalValue < _minValue){
-            [scrollView setContentOffset:CGPointMake((_minValue * RulerGap)/_step, 0) animated:NO];
+            int maxValue = skipValue/_step * RulerGap;
+            //(((skipValue)) * RulerGap ) / _step;
+            [scrollView setContentOffset:CGPointMake(maxValue, 0) animated:NO];
         }
     }
     _scrollByHand = YES;
     if (_scrollByHand) {
-         if((_currentValue >= _minValue)&&(_currentValue <= _maxValue)){
+         /*if((_currentValue >= _minValue)&&(_currentValue <= _maxValue)){
              _currentValue = totalValue;
-         }
+         }*/
         
+        _currentValue = totalValue;
         if(_isTime == true){
             if (totalValue >= _maxValue) {
+                _currentValue = _maxValue;
                 int minutes =  floor(_maxValue / 60);
                 int seconds = _maxValue - minutes * 60;
                 NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
                 _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
             }else if(totalValue <= _minValue){
+                _currentValue = _minValue;
                 if(_minValue == 0) {
                     _valueLab.text = @"0:00";
                 } else {
@@ -966,6 +988,7 @@ typedef enum SCROLL_DIRECTION{
             }
             
             if (totalValue >= _maxValue) {
+                _currentValue = _maxValue;
                 if(_exponent > 0){
                     NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
                     // _valueLab.text = [NSString stringWithFormat:formatStr,_maxValue * _exponentFloatValue];
@@ -990,6 +1013,7 @@ typedef enum SCROLL_DIRECTION{
                 }
                 
             }else if(totalValue <= _minValue){
+                _currentValue = _minValue;
                 if(_minValue == 0) {
                     _valueLab.text = @"0";
                 } else {
@@ -1017,17 +1041,16 @@ typedef enum SCROLL_DIRECTION{
                 }
             }else{
                 if(_exponent > 0){
-                    NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
+                    double decimal = _exponent == 1 ? 10.f : (_exponent == 2 ? 100.f : _exponent == 3 ? 1000.f : _exponent == 4 ? 10000.f : 0.0f);
+                    double newValue = totalValue;
+                    newValue = totalValue/decimal;
                     
-                    NSString *floatStr = [NSString stringWithFormat:formatStr,totalValue * _exponentFloatValue];
-                    
-                    floatStr = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
                     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
                     [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
                     [formatter setMinimumFractionDigits:_exponent];
                     [formatter setMaximumFractionDigits:_exponent];
                     [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithFloat:[[formatter numberFromString:floatStr]floatValue]]];
+                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithDouble:newValue]];
                     _valueLab.text = formatted;
                     
                     
