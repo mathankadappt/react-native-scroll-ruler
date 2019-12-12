@@ -905,8 +905,7 @@ typedef enum SCROLL_DIRECTION{
 #pragma mark -UIScrollViewDelegate
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/RulerGap;
-    //NSLog(@"%d , %f , %d, %d", RulerGap, scrollView.contentOffset.x, _step, value);
-    
+    //[Pull request test]
     //value = value -skipValue;
     int skipValue = (_minValue % (5*_step));
     int totalValue = value*_step + (_minValue - skipValue);
