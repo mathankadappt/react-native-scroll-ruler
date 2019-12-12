@@ -194,40 +194,9 @@
             
             if ((tempInt%(_betweenNumber*stepInt) == 0)){
                 
-                if(exponent > 0){
-                    exponentFloatValue = [self calculateExponentValue:exponent];
-                }else{
-                    exponentFloatValue = 1;
-                }
-                NSString *num;
-                if(exponent > 0){
-                    NSString *formatStr = exponent == 1 ? @"%.1f" : (exponent == 2 ? @"%.2f" : exponent == 3 ? @"%.3f" : exponent == 4 ? @"%.4f" : @"");
-                    num = [NSString stringWithFormat:formatStr, (float)(i * (_step) + _minValue) * exponentFloatValue];
-                    NSString *floatStr = [NSString stringWithFormat:formatStr, (float)(i * (_step) + _minValue) * exponentFloatValue];
-                    floatStr = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
-                    
-                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
-                    [formatter setMaximumFractionDigits:exponent];
-                    [formatter setMinimumFractionDigits:exponent];
-                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                    
-                    
-                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithFloat:[[formatter numberFromString:floatStr]floatValue]]];
-                    
-                    num = formatted;
-                    
-                }else{
-                    
-                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
-                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:(int)(i * (_step) + _minValue)]];
-                    num = formatted;
-                    
-                    //num = [NSString stringWithFormat:@"%d", (int)(i * (_step) + _minValue)];
-                    
-                }
+                int pValue = (i * (_step) + _minValue);
+                NSString *num = [RCTScrollRuler getFormattedString:pValue exponent:exponent];
+               
                 
                 if ([num isEqualToString:@"0"]) {
                     
@@ -353,6 +322,7 @@ typedef enum SCROLL_DIRECTION{
     DIRECTION_RIGHT,
 }SCROLL_DIRECTION;
 
+static NSNumberFormatter * _objFormatter = nil;
 @interface RCTScrollRuler()<UIScrollViewDelegate,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout>
 
 @property(nonatomic, strong)UILabel         *valueLab;
@@ -383,6 +353,7 @@ typedef enum SCROLL_DIRECTION{
 @property(nonatomic, strong)NSTimer *timer;
 @property(nonatomic, assign)int    currentValue;
 @property(nonatomic, assign) SCROLL_DIRECTION direction;
+
 @end
 @implementation RCTScrollRuler
 
@@ -470,7 +441,7 @@ typedef enum SCROLL_DIRECTION{
     int value = roundf((float)(_defaultValue - _minValue + skipValue ) / (float)_step);
     
     //value = value;
-     [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:NO];
+     [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:YES];
     //[self setRealValue:value];
     
     
@@ -796,11 +767,11 @@ typedef enum SCROLL_DIRECTION{
 #pragma mark UICollectionViewDataSource & Delegate
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    return 2+_stepNum + [self skippingValue];
+    return 3+_stepNum + [self skippingValue];
 }
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
-    int newcount = _stepNum ;
+    int newcount = _stepNum + [self skippingValue] ;
     NSLog(@"--- STEP ---%d",newcount);
     if (indexPath.item == 0){
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"headCell" forIndexPath:indexPath];
@@ -854,7 +825,7 @@ typedef enum SCROLL_DIRECTION{
         rulerView.markerColor = _markerColor;
         rulerView.isTime = _isTime;
         rulerView.row               = indexPath.item-1;
-        rulerView.totalRows         = _stepNum;
+        rulerView.totalRows         = newcount;
         [rulerView setNeedsDisplay];
         
         return cell;
@@ -919,6 +890,32 @@ typedef enum SCROLL_DIRECTION{
 }
 
 #pragma mark -UIScrollViewDelegate
++(NSString *)getFormattedString:(int) toValue exponent:(int)exponent{
+    
+    NSNumberFormatter *formatter = _objFormatter;
+    if (_objFormatter == nil) {
+        _objFormatter = [[NSNumberFormatter alloc] init];
+        formatter = _objFormatter;
+        [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
+        [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"de_DE"]];
+        formatter.usesGroupingSeparator = YES;
+        formatter.currencyGroupingSeparator = @".";
+    }
+    
+    if(exponent > 0){
+        [formatter setMinimumFractionDigits:exponent];
+        [formatter setMaximumFractionDigits:exponent];
+        double decimal = exponent == 1 ? 10.f : (exponent == 2 ? 100.f : exponent == 3 ? 1000.f : exponent == 4 ? 10000.f : 0.0f);
+        double newValue = toValue;
+        newValue = toValue/decimal;
+        
+        return [formatter stringFromNumber:[NSNumber numberWithDouble:newValue]];
+    }
+    else {
+        return [formatter stringFromNumber:[NSNumber numberWithInt:toValue]];
+    }
+    
+}
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int offset = scrollView.contentOffset.x;
     int value = scrollView.contentOffset.x/RulerGap;
@@ -989,78 +986,19 @@ typedef enum SCROLL_DIRECTION{
             
             if (totalValue >= _maxValue) {
                 _currentValue = _maxValue;
-                if(_exponent > 0){
-                    NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
-                    // _valueLab.text = [NSString stringWithFormat:formatStr,_maxValue * _exponentFloatValue];
-                    NSString * floatStr = [NSString stringWithFormat:formatStr,_maxValue * _exponentFloatValue];
-                    floatStr = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
-                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
-                    [formatter setMinimumFractionDigits:_exponent];
-                    [formatter setMaximumFractionDigits:_exponent];
-                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                    
-                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithFloat:[[formatter numberFromString:floatStr]floatValue]]];
-                    _valueLab.text = formatted;
-                    
-                    
-                }else{
-                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
-                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:_maxValue]];
-                    _valueLab.text = formatted;
-                }
-                
+                _valueLab.text = [RCTScrollRuler getFormattedString:_maxValue exponent:_exponent];
+                //[self getFormattedString:_maxValue ];
+               
             }else if(totalValue <= _minValue){
                 _currentValue = _minValue;
                 if(_minValue == 0) {
                     _valueLab.text = @"0";
                 } else {
+                     _valueLab.text = [RCTScrollRuler getFormattedString:_minValue exponent:_exponent];
                     
-                    if(_exponent > 0){
-                        NSString *formatStr = _exponent == 1 ? @"%.1f" : (_exponent == 2 ? @"%.2f" : _exponent == 3 ? @"%.3f" : _exponent == 4 ? @"%.4f" : @"");
-                        
-                        NSString * floatStr = [NSString stringWithFormat:formatStr,_minValue * _exponentFloatValue];
-                        floatStr = [floatStr stringByReplacingOccurrencesOfString:@"." withString:@","];
-                        NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                        [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
-                        [formatter setMinimumFractionDigits:_exponent];
-                        [formatter setMaximumFractionDigits:_exponent];
-                        [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                        NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithFloat:[[formatter numberFromString:floatStr]floatValue]]];
-                        _valueLab.text = formatted;
-                        
-                    }else{
-                        NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                        [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
-                        [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                        NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:_minValue]];
-                        _valueLab.text = formatted;
-                    }
                 }
             }else{
-                if(_exponent > 0){
-                    double decimal = _exponent == 1 ? 10.f : (_exponent == 2 ? 100.f : _exponent == 3 ? 1000.f : _exponent == 4 ? 10000.f : 0.0f);
-                    double newValue = totalValue;
-                    newValue = totalValue/decimal;
-                    
-                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
-                    [formatter setMinimumFractionDigits:_exponent];
-                    [formatter setMaximumFractionDigits:_exponent];
-                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithDouble:newValue]];
-                    _valueLab.text = formatted;
-                    
-                    
-                }else{
-                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                    [formatter setNumberStyle:NSNumberFormatterDecimalStyle]; // this line is important!
-                    [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
-                    NSString *formatted = [formatter stringFromNumber:[NSNumber numberWithInteger:totalValue]];
-                    _valueLab.text = formatted;
-                }
+                 _valueLab.text = [RCTScrollRuler getFormattedString:totalValue exponent:_exponent];
             }
         }
     }else{
@@ -1069,7 +1007,7 @@ typedef enum SCROLL_DIRECTION{
 }
 
 -(int)skippingValue{
-    return (_minValue % (5*_step));
+    return (_minValue % (10*_step)) > 0 ? 1 : 0;
 }
 -(int)getContentOffset:(UIScrollView *)scrollView{
     int value = scrollView.contentOffset.x/(float)RulerGap;
