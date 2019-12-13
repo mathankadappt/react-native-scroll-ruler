@@ -40,6 +40,6 @@
 
 +(CGFloat)rulerViewHeight;
 + (UIColor *)colorFromHexString:(NSString *)hexString;
-
++(NSString *)getFormattedString:(int) toValue exponent:(int)exponent;
 @end
 
