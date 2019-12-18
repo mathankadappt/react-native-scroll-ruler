@@ -633,6 +633,8 @@ static NSNumberFormatter * _objFormatter = nil;
         [_leftScrollBtn setImage:leftBtnImage forState:UIControlStateNormal];
         UIImage *rightBtnImage = [UIImage imageNamed:@"plus_icon.png"];
         [_rightScrollBtn setImage:rightBtnImage forState:UIControlStateNormal];
+        _leftScrollBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
+        _rightScrollBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(voiceOverStatusChanged)
                                                      name:UIAccessibilityVoiceOverStatusChanged
