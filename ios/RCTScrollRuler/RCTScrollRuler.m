@@ -631,7 +631,7 @@ static NSNumberFormatter * _objFormatter = nil;
         [_leftScrollBtn setBackgroundColor:[UIColor orangeColor]];
         UIImage *leftBtnImage = [UIImage imageNamed:@"minus.png"];
         [_leftScrollBtn setImage:leftBtnImage forState:UIControlStateNormal];
-        UIImage *rightBtnImage = [UIImage imageNamed:@"plus_icon.png"];
+        UIImage *rightBtnImage = [UIImage imageNamed:@"plus.png"];
         [_rightScrollBtn setImage:rightBtnImage forState:UIControlStateNormal];
         _leftScrollBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
         _rightScrollBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
