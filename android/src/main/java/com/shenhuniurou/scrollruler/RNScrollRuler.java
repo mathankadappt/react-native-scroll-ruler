@@ -16,12 +16,14 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 import android.view.animation.DecelerateInterpolator;
 
 import java.lang.ref.WeakReference;
@@ -179,6 +181,7 @@ public class RNScrollRuler extends View {
     private Paint lagScalePaint;
     private Paint scaleNumPaint;
     private Paint resultNumPaint;
+    private Paint resultNumPaint2;
     private Paint kgPaint;
     private Rect scaleNumRect;
     private Rect resultNumRect;
@@ -201,10 +204,18 @@ public class RNScrollRuler extends View {
     private int rightScroll;
     private int xVelocity;
     private static Context sContext;
+    private  Context mContext;
     private Paint resultRectPaint;
 
     private String markerTextColor = "#ffffff";
     private String markerColor = "#ff8d2a";
+    AccessibilityManager accessibilityManager;
+    private boolean isAccessabilityEnabled;
+    private boolean isUserPressing;
+    final Handler handler = new Handler();
+    private float recentX=0,recentY = 0;
+    private String prevValue = "0";
+    private int flowDirection = 0;
 
     //private  int maxScaleValue  = 100;
 
@@ -233,6 +244,7 @@ public class RNScrollRuler extends View {
 
     public RNScrollRuler(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        mContext = context;
         setAttr(attrs, defStyleAttr);
         init();
     }
@@ -313,7 +325,7 @@ public class RNScrollRuler extends View {
         scaleNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         resultNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         kgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
+        resultNumPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 
         bgPaint.setColor(bgColor);
         horzitalLinePaint.setColor(smallScaleColor);
@@ -324,6 +336,7 @@ public class RNScrollRuler extends View {
         scaleNumPaint.setColor(getResources().getColor(R.color.num_color));
         resultNumPaint.setColor(resultNumColor);
         resultNumPaint.setFakeBoldText(true);
+
         kgPaint.setColor(unitColor);
         kgPaint.setFakeBoldText(true);
 
@@ -335,6 +348,9 @@ public class RNScrollRuler extends View {
         midScalePaint.setStyle(Paint.Style.FILL);
         lagScalePaint.setStyle(Paint.Style.FILL);
 
+        resultNumPaint2.setColor(resultNumColor);
+        resultNumPaint2.setFakeBoldText(true);
+
 //        lagScalePaint.setStrokeCap(Paint.Cap.ROUND);
 //        midScalePaint.setStrokeCap(Paint.Cap.ROUND);
 //        smallScalePaint.setStrokeCap(Paint.Cap.ROUND);
@@ -345,6 +361,7 @@ public class RNScrollRuler extends View {
         lagScalePaint.setStrokeWidth(largeScaleStroke);
         horzitalLinePaint.setStrokeWidth(largeScaleStroke);
 
+        resultNumPaint2.setTextSize(70);
         resultNumPaint.setTextSize(resultNumTextSize);
         kgPaint.setTextSize(unitTextSize);
         scaleNumPaint.setTextSize(scaleNumTextSize);
@@ -362,6 +379,50 @@ public class RNScrollRuler extends View {
         lagScaleHeight = rulerHeight / 2 + 5;
         valueAnimator = new ValueAnimator();
 
+        accessibilityManager = (AccessibilityManager) mContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
+
+        accessibilityManager.addAccessibilityStateChangeListener(new AccessibilityManager.AccessibilityStateChangeListener() {
+            @Override
+            public void onAccessibilityStateChanged(boolean b) {
+                accessibiltyChanged(b);
+            }
+        });
+
+        isAccessabilityEnabled = accessibilityManager.isEnabled();
+
+
+    }
+
+    final Runnable runnable = new Runnable() {
+        public void run() {
+            if(isUserPressing) {
+                if (flowDirection == 0) {
+                    moveX += scaleGap;
+
+                    invalidate();
+                } else if (flowDirection == 1) {
+                    moveX -= scaleGap;
+
+                }
+                if (moveX >= width / 2) {
+                    moveX = width / 2;
+                } else if (moveX <= getWhichScalMovex(maxScale)) {
+                    moveX = getWhichScalMovex(maxScale);
+                }
+                invalidate();
+                handler.postDelayed(runnable, 100);
+            }
+            else
+                mp.setLooping(false);
+        }
+    };
+
+
+
+    public void accessibiltyChanged(boolean changed)
+    {
+        isAccessabilityEnabled = changed;
+        invalidate();
     }
 
     @Override
@@ -400,14 +461,57 @@ public class RNScrollRuler extends View {
         drawResultText(canvas, resultText);
     }
 
+    private boolean isValidTouch(MotionEvent event)
+    {
+        if (leftButton.contains(Math.round(event.getX()), Math.round(event.getY()))) {
+            return  true;
+        } else if (rightButton.contains(Math.round(event.getX()), Math.round(event.getY()))) {
+            return  true;
+        }
+
+        return  false;
+    }
+    private void handleAccessabilityTouch(MotionEvent event)
+    {
+        if(isAccessabilityEnabled && isValidTouch(event)){
+
+            recentX = event.getX();
+            recentY = event.getY();
+
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                {
+                    if (leftButton.contains(Math.round(event.getX()), Math.round(event.getY()))) {
+                        flowDirection = 0;
+                    } else if (rightButton.contains(Math.round(event.getX()), Math.round(event.getY()))) {
+                        flowDirection = 1;
+                    }
+                    mp.setLooping(true);
+                    isUserPressing = true;
+                    handler.postDelayed(runnable,100);
+                }
+                break;
+                case MotionEvent.ACTION_UP:
+                {
+                    mp.setLooping(false);
+                    isUserPressing = false;
+                    handler.removeCallbacks(runnable);
+                }
+                break;
+            }
+        }
+    }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         currentX = event.getX();
         isUp = false;
         velocityTracker.computeCurrentVelocity(500);
         velocityTracker.addMovement(event);
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                //playTicks();
                 //按下时如果属性动画还没执行完,就终止,记录下当前按下点的位置
                 if (valueAnimator != null && valueAnimator.isRunning()) {
                     valueAnimator.end();
@@ -428,8 +532,9 @@ public class RNScrollRuler extends View {
                 Log.d(TAG, "onTouchEvent: " + moveX + " c: " + currentX + " ,X: " + getWhichScalMovex(maxScale));
                 break;
             case MotionEvent.ACTION_UP:
-                mp.pause();
+               // mp.pause();
                 //手指抬起时候制造惯性滑动
+                isUserPressing = false;
                 lastMoveX = moveX;
                 xVelocity = (int) velocityTracker.getXVelocity();
                 autoVelocityScroll(xVelocity);
@@ -443,7 +548,8 @@ public class RNScrollRuler extends View {
                 break;
         }
 
-        playTicks();
+        handleAccessabilityTouch(event);
+
 
         invalidate();
         return true;
@@ -453,6 +559,7 @@ public class RNScrollRuler extends View {
         if (!cacheResultText.equalsIgnoreCase(resultText)) {
             //mp.pause();
             mp.start();
+
             cacheResultText = resultText;
         } else {
 
@@ -773,10 +880,36 @@ public class RNScrollRuler extends View {
         drawTriangle(canvas, paint, width / 2 - Math.round(3.363f * density), resultNumRect.height() - Math.round(36.56f * density), Math.round(54.54f * density));
         //drawButtons(canvas,paint,0,-20, Math.round(40.0f*density),Math.round(resultNumRect.height() * density));
 
-
+        if (!prevValue.equalsIgnoreCase(resultText))
+        {
+            playTicks();
+        }
+        prevValue = resultText;
         //Enable for Left and Right button
-        // canvas.drawRect(leftButton, resultRectPaint);
-        //  canvas.drawRect(rightButton, resultRectPaint);
+        if (isAccessabilityEnabled) {
+            canvas.drawRect(leftButton, resultRectPaint);
+            canvas.drawRect(rightButton, resultRectPaint);
+            //float yR = rightButton.top - (rightButton.top - rightButton.bottom)/2;
+
+
+            Rect symbolRect = new Rect();
+            Rect symbolRect2 = new Rect();
+            resultNumPaint2.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 70, getResources().getDisplayMetrics()));
+            resultNumPaint2.getTextBounds("+", 0, 1, symbolRect);
+            resultNumPaint2.getTextBounds("-", 0, 1, symbolRect2);
+            //resultNumPaint.setColor(getResources().getColor(R.color.white));
+            resultNumPaint2.setColor(Color.parseColor(this.markerTextColor));
+
+            float width =  leftButton.width()/2 - symbolRect.width()/2;
+            float xL = leftButton.centerX() - symbolRect.width()/2;
+            float yL = leftButton.centerY() + symbolRect.height()/2;
+
+            float xR = rightButton.left + leftButton.width()/2 - symbolRect2.width()/2;
+
+
+            canvas.drawText("+",xL , yL, resultNumPaint2);
+            canvas.drawText("-", xR, yL, resultNumPaint2);
+        }
 
 
         //drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
