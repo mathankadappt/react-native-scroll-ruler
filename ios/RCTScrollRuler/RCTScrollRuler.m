@@ -914,6 +914,9 @@ static NSNumberFormatter * _objFormatter = nil;
         return [formatter stringFromNumber:[NSNumber numberWithDouble:newValue]];
     }
     else {
+        [formatter setMinimumFractionDigits:0];
+        [formatter setMaximumFractionDigits:0];
+        
         return [formatter stringFromNumber:[NSNumber numberWithInt:toValue]];
     }
     
