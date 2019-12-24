@@ -907,8 +907,8 @@ public class RNScrollRuler extends View {
             float xR = rightButton.left + leftButton.width()/2 - symbolRect2.width()/2;
 
 
-            canvas.drawText("+",xL , yL, resultNumPaint2);
-            canvas.drawText("-", xR, yL, resultNumPaint2);
+            canvas.drawText("-",xL , yL, resultNumPaint2);
+            canvas.drawText("+", xR, yL, resultNumPaint2);
         }
 
 
