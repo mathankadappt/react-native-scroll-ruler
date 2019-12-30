@@ -35,6 +35,8 @@ import java.util.Locale;
 
 import android.media.MediaPlayer;
 import android.graphics.Path;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 /**
@@ -390,6 +392,17 @@ public class RNScrollRuler extends View {
 
         isAccessabilityEnabled = accessibilityManager.isEnabled();
 
+        Button myButton = new Button(getContext());
+        RelativeLayout.LayoutParams rel_btn = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+
+        rel_btn.leftMargin = 0;
+        rel_btn.topMargin = 0;
+        rel_btn.width = 100;
+        rel_btn.height = 100;
+
+        myButton.setLayoutParams(rel_btn);
+
 
     }
 
@@ -417,6 +430,25 @@ public class RNScrollRuler extends View {
         }
     };
 
+    @Override
+    public boolean onHoverEvent(MotionEvent event) {
+        if (accessibilityManager.isTouchExplorationEnabled() && event.getPointerCount() == 1) {
+            final int action = event.getAction();
+            switch (action) {
+                case MotionEvent.ACTION_HOVER_ENTER: {
+                    event.setAction(MotionEvent.ACTION_DOWN);
+                } break;
+                case MotionEvent.ACTION_HOVER_MOVE: {
+                    event.setAction(MotionEvent.ACTION_MOVE);
+                } break;
+                case MotionEvent.ACTION_HOVER_EXIT: {
+                    event.setAction(MotionEvent.ACTION_UP);
+                } break;
+            }
+            return onTouchEvent(event);
+        }
+        return true;
+    }
 
 
     public void accessibiltyChanged(boolean changed)
@@ -509,45 +541,46 @@ public class RNScrollRuler extends View {
         velocityTracker.computeCurrentVelocity(500);
         velocityTracker.addMovement(event);
 
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                //playTicks();
-                //按下时如果属性动画还没执行完,就终止,记录下当前按下点的位置
-                if (valueAnimator != null && valueAnimator.isRunning()) {
-                    valueAnimator.end();
-                    valueAnimator.cancel();
-                }
-                downX = event.getX();
-                // doManualMove(event);
-                break;
-            case MotionEvent.ACTION_MOVE:
+        if (!isAccessabilityEnabled) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    //playTicks();
+                    //按下时如果属性动画还没执行完,就终止,记录下当前按下点的位置
+                    if (valueAnimator != null && valueAnimator.isRunning()) {
+                        valueAnimator.end();
+                        valueAnimator.cancel();
+                    }
+                    downX = event.getX();
+                    // doManualMove(event);
+                    break;
+                case MotionEvent.ACTION_MOVE:
 
-                //滑动时候,通过假设的滑动距离,做超出左边界以及右边界的限制。
-                moveX = currentX - downX + lastMoveX;
-                if (moveX >= width / 2) {
-                    moveX = width / 2;
-                } else if (moveX <= getWhichScalMovex(maxScale)) {
-                    moveX = getWhichScalMovex(maxScale);
-                }
-                Log.d(TAG, "onTouchEvent: " + moveX + " c: " + currentX + " ,X: " + getWhichScalMovex(maxScale));
-                break;
-            case MotionEvent.ACTION_UP:
-               // mp.pause();
-                //手指抬起时候制造惯性滑动
-                isUserPressing = false;
-                lastMoveX = moveX;
-                xVelocity = (int) velocityTracker.getXVelocity();
-                autoVelocityScroll(xVelocity);
-                velocityTracker.clear();
+                    //滑动时候,通过假设的滑动距离,做超出左边界以及右边界的限制。
+                    moveX = currentX - downX + lastMoveX;
+                    if (moveX >= width / 2) {
+                        moveX = width / 2;
+                    } else if (moveX <= getWhichScalMovex(maxScale)) {
+                        moveX = getWhichScalMovex(maxScale);
+                    }
+                    Log.d(TAG, "onTouchEvent: " + moveX + " c: " + currentX + " ,X: " + getWhichScalMovex(maxScale));
+                    break;
+                case MotionEvent.ACTION_UP:
+                    // mp.pause();
+                    //手指抬起时候制造惯性滑动
+                    isUserPressing = false;
+                    lastMoveX = moveX;
+                    xVelocity = (int) velocityTracker.getXVelocity();
+                    autoVelocityScroll(xVelocity);
+                    velocityTracker.clear();
                 /*Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
                 if (rectangle.contains((int)event.getX(),(int)event.getY()))
                 {
                     mp.start();
                 }*/
 
-                break;
+                    break;
+            }
         }
-
         handleAccessabilityTouch(event);
 
 
