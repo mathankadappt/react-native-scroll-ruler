@@ -934,8 +934,11 @@ static NSNumberFormatter * _objFormatter = nil;
         [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-            //  [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
-            
+           
+            if(UIAccessibilityIsVoiceOverRunning() == YES)
+            {
+              [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+            }
         }
     }else{
         if(totalValue > _maxValue){
