@@ -1012,6 +1012,8 @@ static NSNumberFormatter * _objFormatter = nil;
     }else{
         // _valueLab.text = [NSString stringWithFormat:@"%d",_defaultValue];
     }
+    _rightScrollBtn.accessibilityLabel = _valueLab.text;
+    _leftScrollBtn.accessibilityLabel = _valueLab.text;
 }
 
 -(int)skippingValue{
