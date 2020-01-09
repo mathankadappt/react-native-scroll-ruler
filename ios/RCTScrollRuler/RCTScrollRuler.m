@@ -365,6 +365,8 @@ static NSNumberFormatter * _objFormatter = nil;
     self.backgroundColor    = [UIColor clearColor];
     
     //[self addSubview:self.unitLab];
+    
+    
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
     if(UIAccessibilityIsVoiceOverRunning() == YES)
@@ -377,10 +379,12 @@ static NSNumberFormatter * _objFormatter = nil;
     [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
+   
 }
 - (void)setMinValue:(int)minValue {
     _minValue = minValue;
     [self reconfigureValues];
+    [self setDefaultValue:_defaultValue];
     
 }
 
@@ -388,12 +392,15 @@ static NSNumberFormatter * _objFormatter = nil;
     
     _maxValue = maxValue;
     [self reconfigureValues];
+    [self setDefaultValue:_defaultValue];
 }
 
 - (void)setIsTime:(BOOL)isTime {
     
     _isTime = isTime;
     [self reconfigureValues];
+    self.collectionView.contentOffset = CGPointZero;
+    [self.collectionView reloadData];
     [self setDefaultValue:_defaultValue];
     
 }
@@ -439,7 +446,7 @@ static NSNumberFormatter * _objFormatter = nil;
     int skipValue = (_minValue % (10*_step));
     _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
     int value = roundf((float)(_defaultValue - _minValue + skipValue ) / (float)_step);
-    
+    _collectionView.contentOffset = CGPointMake((value*RulerGap), 0);
     //value = value;
      [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:YES];
     //[self setRealValue:value];
