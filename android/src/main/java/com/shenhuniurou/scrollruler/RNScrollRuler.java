@@ -903,7 +903,7 @@ public class RNScrollRuler extends View {
         resultRectPaint.setStrokeWidth(4);
         // Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
 
-        Rect rectangle = new Rect(width / 2 + Math.round(58 * density), -Math.round(65.46f * density), width / 2 - Math.round(54.54f * density), resultNumRect.height() - Math.round(36.36f * density));
+        Rect rectangle = new Rect(width / 2 - Math.round(58 * density), -Math.round(65.46f * density), width / 2 + Math.round(54.54f * density), resultNumRect.height() - Math.round(36.36f * density));
         canvas.drawRect(rectangle, resultRectPaint);
 
         Paint paint = new Paint();
