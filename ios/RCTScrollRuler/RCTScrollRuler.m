@@ -384,24 +384,24 @@ static NSNumberFormatter * _objFormatter = nil;
 - (void)setMinValue:(int)minValue {
     _minValue = minValue;
     [self reconfigureValues];
-    [self setDefaultValue:_defaultValue];
-    
+   // [self setDefaultValue:_defaultValue];
+    self.collectionView.contentOffset = CGPointZero;
+    [self.collectionView reloadData];
+    [self calculateDefaultValue];
 }
 
 - (void)setMaxValue:(int)maxValue {
     
     _maxValue = maxValue;
-    [self reconfigureValues];
-    [self setDefaultValue:_defaultValue];
+    //[self reconfigureValues];
+   // [self setDefaultValue:_defaultValue];
 }
 
 - (void)setIsTime:(BOOL)isTime {
     
     _isTime = isTime;
-    [self reconfigureValues];
-    self.collectionView.contentOffset = CGPointZero;
-    [self.collectionView reloadData];
-    [self setDefaultValue:_defaultValue];
+   // [self reconfigureValues];
+    [self calculateDefaultValue];
     
 }
 
@@ -410,7 +410,7 @@ static NSNumberFormatter * _objFormatter = nil;
     
     _markerColor = markerColor;
     
-    [self reconfigureValues];
+    //[self reconfigureValues];
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     _triangle.triangleColor     = [UIColor orangeColor];
     [self addTriangleTipToLayer:_valueLab.layer];
@@ -422,7 +422,7 @@ static NSNumberFormatter * _objFormatter = nil;
 - (void)setMarkerTextColor:(NSString *)markerTextColor{
     
     _markerTextColor = markerTextColor;
-    [self reconfigureValues];
+    //[self reconfigureValues];
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
     //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
@@ -432,10 +432,13 @@ static NSNumberFormatter * _objFormatter = nil;
 
 - (void)setStep:(float)step {
     _step = step;
-    [self reconfigureValues];
+    [self calculateDefaultValue];
+    //[self reconfigureValues];
 }
 
 - (void)setDefaultValue:(int)defaultValue {
+}
+-(void)calculateDefaultValue{
     
     /*
      T = ( V * S ) + M
@@ -450,7 +453,8 @@ static NSNumberFormatter * _objFormatter = nil;
     //value = value;
      [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:YES];
     //[self setRealValue:value];
-    
+    _currentValue = _defaultValue;
+    [self triggerSelectedValue];
     
 }
 
@@ -472,7 +476,7 @@ static NSNumberFormatter * _objFormatter = nil;
 
 - (void)setUnit:(NSString *)unit {
     _unit = unit;
-    [self reconfigureValues];
+    //[self reconfigureValues];
 }
 
 -(float)calculateExponentValue:(int)exp{
@@ -755,6 +759,7 @@ static NSNumberFormatter * _objFormatter = nil;
     [self scrollToExactPosition];
 }
 
+
 -(void)scrollToExactPosition{
     int offset = _collectionView.contentOffset.x;
     int value = _collectionView.contentOffset.x/RulerGap;
@@ -873,6 +878,7 @@ static NSNumberFormatter * _objFormatter = nil;
 -(void)playAudio:(int)realValue{
     if (self.previousRealValue != realValue){
         self.previousRealValue = realValue;
+        NSLog(@"%@",[[NSBundle mainBundle] resourcePath]);
         NSString *soundFilePath = [NSString stringWithFormat:@"%@/tickering.mp3",[[NSBundle mainBundle] resourcePath]];
         NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
         
