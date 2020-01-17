@@ -324,7 +324,9 @@ typedef enum SCROLL_DIRECTION{
 
 static NSNumberFormatter * _objFormatter = nil;
 @interface RCTScrollRuler()<UIScrollViewDelegate,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout>
-
+{
+    NSURL *soundFileURL;
+}
 @property(nonatomic, strong)UILabel         *valueLab;
 @property(nonatomic, strong)UILabel         *unitLab;
 @property(nonatomic, strong)UICollectionView*collectionView;
@@ -382,32 +384,32 @@ static NSNumberFormatter * _objFormatter = nil;
    
 }
 - (void)setMinValue:(int)minValue {
+    NSLog(@"setMinValue");
     _minValue = minValue;
     [self reconfigureValues];
-   // [self setDefaultValue:_defaultValue];
-    self.collectionView.contentOffset = CGPointZero;
-    [self.collectionView reloadData];
+   self.collectionView.contentOffset = CGPointZero;
     [self calculateDefaultValue];
 }
 
 - (void)setMaxValue:(int)maxValue {
-    
+    NSLog(@"setMaxValue");
     _maxValue = maxValue;
     //[self reconfigureValues];
    // [self setDefaultValue:_defaultValue];
 }
 
 - (void)setIsTime:(BOOL)isTime {
-    
+    NSLog(@"setIsTime");
     _isTime = isTime;
-   // [self reconfigureValues];
+    _collectionView.contentOffset = CGPointMake(0, 0);
+    //[self reconfigureValues];
     [self calculateDefaultValue];
     
 }
 
 - (void)setMarkerColor:(NSString *)markerColor{
     
-    
+    NSLog(@"setMarkerColor");
     _markerColor = markerColor;
     
     //[self reconfigureValues];
@@ -421,6 +423,7 @@ static NSNumberFormatter * _objFormatter = nil;
 
 - (void)setMarkerTextColor:(NSString *)markerTextColor{
     
+    NSLog(@"setMarkerTextColor");
     _markerTextColor = markerTextColor;
     //[self reconfigureValues];
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
@@ -431,12 +434,22 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 - (void)setStep:(float)step {
+    NSLog(@"setStep");
     _step = step;
-    [self calculateDefaultValue];
-    //[self reconfigureValues];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        
+        [self reconfigureValues];
+        [self.collectionView reloadData];
+        
+        [self calculateDefaultValue];
+        
+    });
+    
 }
 
 - (void)setDefaultValue:(int)defaultValue {
+    NSLog(@"setDefaultValue");
 }
 -(void)calculateDefaultValue{
     
@@ -449,12 +462,26 @@ static NSNumberFormatter * _objFormatter = nil;
     int skipValue = (_minValue % (10*_step));
     _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
     int value = roundf((float)(_defaultValue - _minValue + skipValue ) / (float)_step);
+    NSLog(@"Val :%d",value);
+    NSLog(@"_minValue :%d",_minValue);
+    NSLog(@"step :%d",_step);
+    if (value < 0) {
+        value = 0;
+       // [self.collectionView reloadData];
+        
+    }
+   /* else
     _collectionView.contentOffset = CGPointMake((value*RulerGap), 0);
-    //value = value;
-     [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:YES];
+    //value = value;*/
+    _collectionView.contentOffset = CGPointMake((value*RulerGap), 0);
+    [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:NO];
     //[self setRealValue:value];
+    
+    
     _currentValue = _defaultValue;
     [self triggerSelectedValue];
+    [self updateValueLabel:_currentValue];
+    
     
 }
 
@@ -530,8 +557,11 @@ static NSNumberFormatter * _objFormatter = nil;
 //The event handling method
 - (void)handleSingleTap:(UITapGestureRecognizer *)recognizer
 {
-    NSString *soundFilePath = [NSString stringWithFormat:@"%@/tickering.mp3",[[NSBundle mainBundle] resourcePath]];
-    NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
+    if (soundFileURL == nil) {
+        NSString *soundFilePath = [NSString stringWithFormat:@"%@/tickering.mp3",[[NSBundle mainBundle] resourcePath]];
+        soundFileURL = [NSURL fileURLWithPath:soundFilePath];
+        
+    }
     
     if (self.audioPlayer == nil){
         self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:soundFileURL error:nil];
@@ -878,9 +908,12 @@ static NSNumberFormatter * _objFormatter = nil;
 -(void)playAudio:(int)realValue{
     if (self.previousRealValue != realValue){
         self.previousRealValue = realValue;
-        NSLog(@"%@",[[NSBundle mainBundle] resourcePath]);
-        NSString *soundFilePath = [NSString stringWithFormat:@"%@/tickering.mp3",[[NSBundle mainBundle] resourcePath]];
-        NSURL *soundFileURL = [NSURL fileURLWithPath:soundFilePath];
+       // NSLog(@"%@",[[NSBundle mainBundle] resourcePath]);
+        if (soundFileURL == nil) {
+            NSString *soundFilePath = [NSString stringWithFormat:@"%@/tickering.mp3",[[NSBundle mainBundle] resourcePath]];
+            soundFileURL = [NSURL fileURLWithPath:soundFilePath];
+            
+        }
         
         if (self.audioPlayer == nil){
             self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:soundFileURL error:nil];
@@ -934,6 +967,60 @@ static NSNumberFormatter * _objFormatter = nil;
     }
     
 }
+-(void)updateValueLabel:(int)totalValue{
+    _currentValue = totalValue;
+    if(_isTime == true){
+        if (totalValue >= _maxValue) {
+            _currentValue = _maxValue;
+            int minutes =  floor(_maxValue / 60);
+            int seconds = _maxValue - minutes * 60;
+            NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
+            _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
+        }else if(totalValue <= _minValue){
+            _currentValue = _minValue;
+            if(_minValue == 0) {
+                _valueLab.text = @"0:00";
+            } else {
+                //_valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
+                int minutes =  floor(_minValue / 60);
+                int seconds = _minValue - minutes * 60;
+                NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
+                _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
+            }
+        }else{
+            
+            int minutes =  floor(totalValue/ 60);
+            int seconds = totalValue - minutes * 60;
+            NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
+            _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
+            
+        }
+    }else{
+        
+        if(_exponent > 0){
+            _exponentFloatValue = [self calculateExponentValue:_exponent];
+        }else{
+            _exponentFloatValue = 1;
+        }
+        
+        if (totalValue >= _maxValue) {
+            _currentValue = _maxValue;
+            _valueLab.text = [RCTScrollRuler getFormattedString:_maxValue exponent:_exponent];
+            //[self getFormattedString:_maxValue ];
+            
+        }else if(totalValue <= _minValue){
+            _currentValue = _minValue;
+            if(_minValue == 0) {
+                _valueLab.text = @"0";
+            } else {
+                _valueLab.text = [RCTScrollRuler getFormattedString:_minValue exponent:_exponent];
+                
+            }
+        }else{
+            _valueLab.text = [RCTScrollRuler getFormattedString:totalValue exponent:_exponent];
+        }
+    }
+}
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int offset = scrollView.contentOffset.x;
     int value = scrollView.contentOffset.x/RulerGap;
@@ -970,58 +1057,7 @@ static NSNumberFormatter * _objFormatter = nil;
              _currentValue = totalValue;
          }*/
         
-        _currentValue = totalValue;
-        if(_isTime == true){
-            if (totalValue >= _maxValue) {
-                _currentValue = _maxValue;
-                int minutes =  floor(_maxValue / 60);
-                int seconds = _maxValue - minutes * 60;
-                NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
-                _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
-            }else if(totalValue <= _minValue){
-                _currentValue = _minValue;
-                if(_minValue == 0) {
-                    _valueLab.text = @"0:00";
-                } else {
-                    //_valueLab.text = [NSString stringWithFormat:@"%d",_minValue];
-                    int minutes =  floor(_minValue / 60);
-                    int seconds = _minValue - minutes * 60;
-                    NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
-                    _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
-                }
-            }else{
-                
-                int minutes =  floor(totalValue/ 60);
-                int seconds = totalValue - minutes * 60;
-                NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
-                _valueLab.text = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
-                
-            }
-        }else{
-            
-            if(_exponent > 0){
-                _exponentFloatValue = [self calculateExponentValue:_exponent];
-            }else{
-                _exponentFloatValue = 1;
-            }
-            
-            if (totalValue >= _maxValue) {
-                _currentValue = _maxValue;
-                _valueLab.text = [RCTScrollRuler getFormattedString:_maxValue exponent:_exponent];
-                //[self getFormattedString:_maxValue ];
-               
-            }else if(totalValue <= _minValue){
-                _currentValue = _minValue;
-                if(_minValue == 0) {
-                    _valueLab.text = @"0";
-                } else {
-                     _valueLab.text = [RCTScrollRuler getFormattedString:_minValue exponent:_exponent];
-                    
-                }
-            }else{
-                 _valueLab.text = [RCTScrollRuler getFormattedString:totalValue exponent:_exponent];
-            }
-        }
+        [self updateValueLabel:totalValue];
     }else{
         // _valueLab.text = [NSString stringWithFormat:@"%d",_defaultValue];
     }
