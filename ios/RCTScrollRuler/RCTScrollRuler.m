@@ -478,21 +478,23 @@ static NSNumberFormatter * _objFormatter = nil;
      T-M/S = V
      */
     int skipValue = (_minValue % (10*_step));
-    _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
+    _defaultValue = roundf(((float)(_maxValue + _minValue)) / (2.0f * _step)) * _step;
     
     int value = roundf((float)(_defaultValue - _minValue + skipValue ) / (float)_step);
     if (value < 0) {
         value = 0;
     }
     
+    _currentValue = _defaultValue;
+    [self triggerSelectedValue];
+    [self updateValueLabel:_currentValue];
+    
     _collectionView.contentOffset = CGPointMake((value*RulerGap), 0);
     [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:NO];
     
     
     
-    _currentValue = _defaultValue;
-    [self triggerSelectedValue];
-    [self updateValueLabel:_currentValue];
+    
    // [self accessibilityElementDidBecomeFocused];
     
 }
