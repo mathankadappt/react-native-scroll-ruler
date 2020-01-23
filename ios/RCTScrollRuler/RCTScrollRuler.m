@@ -25,7 +25,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <AVFoundation/AVFoundation.h>
 #include <math.h>
-
+//#import "RNRullerAccessbilityElement.h"
 /**
  *  绘制三角形标示
  */
@@ -123,7 +123,7 @@
     int skipValue = (_baseMinValue % (10*stepInt));
     _minValue = _minValue - skipValue;
     _maxValue = _maxValue - skipValue;
-    
+   
     if(isTime == true){
         
         for (int i = 0; i <= _betweenNumber; i ++){
@@ -185,9 +185,11 @@
             CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
             int tempInt = (int)(i * (_step)) + _minValue;
             if(tempInt > _totalMaxValue){
+                
                 return;
             }
             if(tempInt < _baseMinValue){
+                
                 continue;
             }
             
@@ -196,7 +198,7 @@
                 
                 int pValue = (i * (_step) + _minValue);
                 NSString *num = [RCTScrollRuler getFormattedString:pValue exponent:exponent];
-               
+                
                 
                 if ([num isEqualToString:@"0"]) {
                     
@@ -355,7 +357,8 @@ static NSNumberFormatter * _objFormatter = nil;
 @property(nonatomic, strong)NSTimer *timer;
 @property(nonatomic, assign)int    currentValue;
 @property(nonatomic, assign) SCROLL_DIRECTION direction;
-
+//@property RNRullerAccessbilityElement * theRullerAccessbilityElement;
+@property NSMutableArray *accessbilityElements;
 @end
 @implementation RCTScrollRuler
 
@@ -371,47 +374,55 @@ static NSNumberFormatter * _objFormatter = nil;
     
     [self addSubview:self.collectionView];
     [self addSubview:self.triangle];
-    if(UIAccessibilityIsVoiceOverRunning() == YES)
+    
+    //NSLog(@"%@",NSStringFromCGRect(self.collectionView.bounds));
+    /*if(UIAccessibilityIsVoiceOverRunning() == YES)
     {
         [self addSubview:_leftScrollBtn];
         [self addSubview:_rightScrollBtn];
-    }
+    }*/
     //[self addSubview:self.grayLine];
     
     [self setExponent:_exponent];
     self.unitLab.text = _unit;
     [self addSubview:self.valueLab];
-   
+    
 }
 - (void)setMinValue:(int)minValue {
-    NSLog(@"setMinValue");
-    _minValue = minValue;
-    [self reconfigureValues];
-   self.collectionView.contentOffset = CGPointZero;
-    [self calculateDefaultValue];
+    
+    _minValue = 0;
+    _stepNum = 0;
+    [self.collectionView reloadData];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        _minValue = minValue;
+        [self reconfigureValues];
+        [self.collectionView reloadData];
+    });
+    
+    [self lazyReload];
+    // [self calculateDefaultValue];
 }
 
 - (void)setMaxValue:(int)maxValue {
-    NSLog(@"setMaxValue");
+    //NSLog(@"setMaxValue");
     _maxValue = maxValue;
-    //[self reconfigureValues];
-   // [self setDefaultValue:_defaultValue];
+    [self reconfigureValues];
 }
 
 - (void)setIsTime:(BOOL)isTime {
-    NSLog(@"setIsTime");
+   
     _isTime = isTime;
-    _collectionView.contentOffset = CGPointMake(0, 0);
-    //[self reconfigureValues];
+    [self reconfigureValues];
     [self calculateDefaultValue];
     
 }
 
 - (void)setMarkerColor:(NSString *)markerColor{
     
-    NSLog(@"setMarkerColor");
+   
     _markerColor = markerColor;
-    
+     [self reconfigureValues];
     //[self reconfigureValues];
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     _triangle.triangleColor     = [UIColor orangeColor];
@@ -423,9 +434,9 @@ static NSNumberFormatter * _objFormatter = nil;
 
 - (void)setMarkerTextColor:(NSString *)markerTextColor{
     
-    NSLog(@"setMarkerTextColor");
+    
     _markerTextColor = markerTextColor;
-    //[self reconfigureValues];
+    [self reconfigureValues];
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     self.valueLab.textColor = [RCTScrollRuler colorFromHexString:_markerTextColor];
     //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
@@ -434,54 +445,54 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 - (void)setStep:(float)step {
-    NSLog(@"setStep");
+   
     _step = step;
-    
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        
-        [self reconfigureValues];
-        [self.collectionView reloadData];
-        
-        [self calculateDefaultValue];
+     [self reconfigureValues];
+    [self lazyReload];
+}
+-(void)lazyReload{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [self performSelectorOnMainThread:@selector(scrollToDefaultValue) withObject:nil waitUntilDone:YES];
         
     });
-    
 }
 
 - (void)setDefaultValue:(int)defaultValue {
-    NSLog(@"setDefaultValue");
+    //NSLog(@"setDefaultValue");
+     [self reconfigureValues];
 }
 -(void)calculateDefaultValue{
+    
+    _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
+    _currentValue = _defaultValue;
+    [self triggerSelectedValue];
+    [self updateValueLabel:_currentValue];
+}
+
+-(void)scrollToDefaultValue{
     
     /*
      T = ( V * S ) + M
      T-M = V * S
      T-M/S = V
      */
-    
     int skipValue = (_minValue % (10*_step));
     _defaultValue = roundf(((float)(_maxValue + _minValue)) / 2.0f);
+    
     int value = roundf((float)(_defaultValue - _minValue + skipValue ) / (float)_step);
-    NSLog(@"Val :%d",value);
-    NSLog(@"_minValue :%d",_minValue);
-    NSLog(@"step :%d",_step);
     if (value < 0) {
         value = 0;
-       // [self.collectionView reloadData];
-        
     }
-   /* else
-    _collectionView.contentOffset = CGPointMake((value*RulerGap), 0);
-    //value = value;*/
+    
     _collectionView.contentOffset = CGPointMake((value*RulerGap), 0);
     [_collectionView setContentOffset:CGPointMake((value*RulerGap), 0) animated:NO];
-    //[self setRealValue:value];
+    
     
     
     _currentValue = _defaultValue;
     [self triggerSelectedValue];
     [self updateValueLabel:_currentValue];
-    
+   // [self accessibilityElementDidBecomeFocused];
     
 }
 
@@ -550,8 +561,56 @@ static NSNumberFormatter * _objFormatter = nil;
         //[self addSubview:self.grayLine];
         self.unitLab.text = _unit;
         [self addSubview:self.valueLab];
+        self.collectionView.isAccessibilityElement = false;
+        self.isAccessibilityElement = YES;
+        self.shouldGroupAccessibilityChildren = false;
     }
     return self;
+}
+-(void)postAccessbilityChanged{
+    UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, self);
+}
+- (NSString *)accessibilityValue{
+    return self.valueLab.text;
+}
+
+
+- (UIAccessibilityTraits)accessibilityTraits{
+    return UIAccessibilityTraitAdjustable;
+}
+
+- (void)setAccessibilityTraits:(UIAccessibilityTraits)accessibilityTraits{
+    [super setAccessibilityTraits:accessibilityTraits];
+}
+
+- (NSString *)accessibilityHint{
+    return @"My AccessibilityHint";
+}
+
+- (void)setAccessibilityHint:(NSString *)accessibilityHint{
+    [super setAccessibilityHint:accessibilityHint];
+}
+
+- (void)accessibilityDecrement{
+    NSLog(@"accessibilityDecrement");
+    [self repeatLeft:1];
+}
+
+- (void)accessibilityIncrement {
+    NSLog(@"accessibilityIncrement");
+    [self repeatRight:1];
+}
+- (BOOL)accessibilityScroll:(UIAccessibilityScrollDirection)direction
+{
+    NSLog(@"accessibilityScroll");
+    if (direction == UIAccessibilityScrollDirectionUp || direction == UIAccessibilityScrollDirectionRight) {
+        [self repeatRight:10];
+    }
+    else {
+        [self repeatLeft:10];
+    }
+    
+    return YES;
 }
 
 //The event handling method
@@ -664,7 +723,7 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 -(void)setupAccessabilityButton {
-    if(UIAccessibilityIsVoiceOverRunning() == YES)
+   /* if(UIAccessibilityIsVoiceOverRunning() == YES)
     {
         _leftScrollBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 30, 50, _collectionView.frame.size.height + 0)];
         _rightScrollBtn = [[UIButton alloc]initWithFrame:CGRectMake((self.bounds.size.width+20) - 50, 30, 50, _collectionView.frame.size.height)];
@@ -688,7 +747,7 @@ static NSNumberFormatter * _objFormatter = nil;
         
         [_rightScrollBtn addTarget:self action:@selector(stopTimer:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
         [_leftScrollBtn addTarget:self action:@selector(stopTimer:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
-    }
+    }*/
 }
 
 -(void)invalidateTimer{
@@ -697,31 +756,30 @@ static NSNumberFormatter * _objFormatter = nil;
     }
 }
 -(void)scheduleTimer{
-    [self invalidateTimer];
+    /*[self invalidateTimer];
     _timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(scrollCollectionView) userInfo:nil repeats:YES];
-    [_timer fire];
+    [_timer fire];*/
 }
--(void)repeatRight:(id)sender{
+-(void)repeatRight:(int)time{
     _direction = DIRECTION_RIGHT;
-    [self scheduleTimer];
+    [self scrollCollectionView:time];
 }
 
--(void)stopTimer:(id)sender{
+-(void)stopTimer:(int)time{
     [self invalidateTimer];
 }
 
--(void)repeatLeft:(id)sender{
+-(void)repeatLeft:(int)time{
     _direction = DIRECTION_LEFT;
-    [self scheduleTimer];
+    [self scrollCollectionView:time];
 }
 
-- (void)scrollCollectionView
+- (void)scrollCollectionView:(int)time
 {
+    
     CGPoint cx = self.collectionView.contentOffset;
-    cx.x = _direction == DIRECTION_LEFT ? cx.x + RulerGap : cx.x - RulerGap;
+    cx.x = _direction == DIRECTION_LEFT ? cx.x + (RulerGap *time) : cx.x - (RulerGap *time);
     [self.collectionView setContentOffset:cx animated:NO];
-    
-    
     
 }
 
@@ -731,7 +789,7 @@ static NSNumberFormatter * _objFormatter = nil;
         _valueLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2-30, -20, 80, 40)];
         _valueLab.textColor = [UIColor whiteColor];//[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
         _valueLab.adjustsFontSizeToFitWidth = YES;
-       
+        
         if(![_markerColor isEqualToString:@"0"]){
             _valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];;
             //_triangle.triangleColor     = [RCTScrollRuler colorFromHexString:_markerColor];
@@ -816,7 +874,7 @@ static NSNumberFormatter * _objFormatter = nil;
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
     int newcount = _stepNum + [self skippingValue] ;
-    NSLog(@"--- STEP ---%d",newcount);
+    
     if (indexPath.item == 0){
         UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"headCell" forIndexPath:indexPath];
         DYHeaderRulerView *headerView = [cell.contentView viewWithTag:1000];
@@ -865,7 +923,7 @@ static NSNumberFormatter * _objFormatter = nil;
         rulerView.betweenNumber = _betweenNum;
         rulerView.defaultValue = (int)(_defaultValue);
         rulerView.exponent = _exponent;
-        
+        rulerView.step              = _step;
         rulerView.markerColor = _markerColor;
         rulerView.isTime = _isTime;
         rulerView.row               = indexPath.item-1;
@@ -906,9 +964,10 @@ static NSNumberFormatter * _objFormatter = nil;
     AudioServicesPlaySystemSound(self.pewPewSound);
 }
 -(void)playAudio:(int)realValue{
+    
     if (self.previousRealValue != realValue){
         self.previousRealValue = realValue;
-       // NSLog(@"%@",[[NSBundle mainBundle] resourcePath]);
+        // NSLog(@"%@",[[NSBundle mainBundle] resourcePath]);
         if (soundFileURL == nil) {
             NSString *soundFilePath = [NSString stringWithFormat:@"%@/tickering.mp3",[[NSBundle mainBundle] resourcePath]];
             soundFileURL = [NSURL fileURLWithPath:soundFilePath];
@@ -927,10 +986,10 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 -(void)triggerSelectedValue{
-   
+    
     if((_currentValue >= _minValue)&&(_currentValue <= _maxValue)){
         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-            NSLog(@"total value2:%d",_currentValue);
+            
             [self.delegate dyScrollRulerView:self valueChange:_currentValue exponent:_exponent exponentFValue:_exponentFloatValue];
             
         }
@@ -1020,6 +1079,8 @@ static NSNumberFormatter * _objFormatter = nil;
             _valueLab.text = [RCTScrollRuler getFormattedString:totalValue exponent:_exponent];
         }
     }
+    UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, // announce
+                                    _valueLab.text);
 }
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int offset = scrollView.contentOffset.x;
@@ -1031,13 +1092,13 @@ static NSNumberFormatter * _objFormatter = nil;
     
     //totalValue -= skipValue;
     
-        [self playAudio:totalValue];
+    [self playAudio:totalValue];
     if((totalValue >= _minValue)&&(totalValue <= _maxValue)){
         if (self.delegate && [self.delegate respondsToSelector:@selector(dyScrollRulerView:valueChange:exponent: exponentFValue:)]) {
-           
+            
             if(UIAccessibilityIsVoiceOverRunning() == YES)
             {
-              [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+                //[self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
             }
         }
     }else{
@@ -1053,16 +1114,16 @@ static NSNumberFormatter * _objFormatter = nil;
     }
     _scrollByHand = YES;
     if (_scrollByHand) {
-         /*if((_currentValue >= _minValue)&&(_currentValue <= _maxValue)){
-             _currentValue = totalValue;
+        /*if((_currentValue >= _minValue)&&(_currentValue <= _maxValue)){
+         _currentValue = totalValue;
          }*/
         
         [self updateValueLabel:totalValue];
     }else{
         // _valueLab.text = [NSString stringWithFormat:@"%d",_defaultValue];
     }
-    _rightScrollBtn.accessibilityLabel = _valueLab.text;
-    _leftScrollBtn.accessibilityLabel = _valueLab.text;
+   // _rightScrollBtn.accessibilityLabel = _valueLab.text;
+   // _leftScrollBtn.accessibilityLabel = _valueLab.text;
 }
 
 -(int)skippingValue{
@@ -1077,7 +1138,7 @@ static NSNumberFormatter * _objFormatter = nil;
 
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{//拖拽时没有滑动动画
     if (!decelerate){
-          int value = [self getContentOffset:scrollView];
+        int value = [self getContentOffset:scrollView];
         [self setRealValue:value animated:YES];
         [self triggerSelectedValue];
     }
@@ -1089,7 +1150,7 @@ static NSNumberFormatter * _objFormatter = nil;
     
     [self setRealValue:round(value) animated:NO];
     [self triggerSelectedValue];
-   
+    
 }
 
 
