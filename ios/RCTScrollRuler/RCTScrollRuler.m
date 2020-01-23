@@ -358,7 +358,8 @@ static NSNumberFormatter * _objFormatter = nil;
 @property(nonatomic, assign)int    currentValue;
 @property(nonatomic, assign) SCROLL_DIRECTION direction;
 //@property RNRullerAccessbilityElement * theRullerAccessbilityElement;
-@property NSMutableArray *accessbilityElements;
+//@property NSMutableArray *accessbilityElements;
+@property(nonatomic, assign)BOOL           isAccesbilityFocused;
 @end
 @implementation RCTScrollRuler
 
@@ -573,7 +574,14 @@ static NSNumberFormatter * _objFormatter = nil;
 - (NSString *)accessibilityValue{
     return self.valueLab.text;
 }
-
+- (void)accessibilityElementDidBecomeFocused
+{
+    self.isAccesbilityFocused = true;
+}
+- (void)accessibilityElementDidLoseFocus
+{
+    self.isAccesbilityFocused = false;
+}
 
 - (UIAccessibilityTraits)accessibilityTraits{
     return UIAccessibilityTraitAdjustable;
@@ -584,7 +592,7 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 - (NSString *)accessibilityHint{
-    return @"My AccessibilityHint";
+    return @"Use 3 finger swipe gesture to increase or decrease 10 unit";
 }
 
 - (void)setAccessibilityHint:(NSString *)accessibilityHint{
@@ -778,7 +786,7 @@ static NSNumberFormatter * _objFormatter = nil;
 {
     
     CGPoint cx = self.collectionView.contentOffset;
-    cx.x = _direction == DIRECTION_LEFT ? cx.x + (RulerGap *time) : cx.x - (RulerGap *time);
+    cx.x = _direction == DIRECTION_LEFT ? cx.x - (RulerGap *time) : cx.x + (RulerGap *time);
     [self.collectionView setContentOffset:cx animated:NO];
     
 }
@@ -1079,8 +1087,10 @@ static NSNumberFormatter * _objFormatter = nil;
             _valueLab.text = [RCTScrollRuler getFormattedString:totalValue exponent:_exponent];
         }
     }
+    if(self.isAccesbilityFocused){
     UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, // announce
                                     _valueLab.text);
+    }
 }
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     int offset = scrollView.contentOffset.x;
@@ -1098,7 +1108,8 @@ static NSNumberFormatter * _objFormatter = nil;
             
             if(UIAccessibilityIsVoiceOverRunning() == YES)
             {
-                //[self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+                [self.delegate dyScrollRulerView:self valueChange:totalValue exponent:_exponent exponentFValue:_exponentFloatValue];
+                
             }
         }
     }else{
