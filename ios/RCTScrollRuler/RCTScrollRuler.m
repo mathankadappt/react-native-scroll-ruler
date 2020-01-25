@@ -603,23 +603,22 @@ static NSNumberFormatter * _objFormatter = nil;
 
 - (void)accessibilityDecrement{
     NSLog(@"accessibilityDecrement");
-    [self repeatRight:1];
+    [self repeatLeft:1];
 }
 
 - (void)accessibilityIncrement {
     NSLog(@"accessibilityIncrement");
-    [self repeatLeft:1];
+    [self repeatRight:1];
 }
 - (BOOL)accessibilityScroll:(UIAccessibilityScrollDirection)direction
 {
     NSLog(@"accessibilityScroll");
     if (direction == UIAccessibilityScrollDirectionUp || direction == UIAccessibilityScrollDirectionRight) {
         [self repeatLeft:10];
-        
     }
     else {
-        
         [self repeatRight:10];
+        
     }
     
     return YES;
