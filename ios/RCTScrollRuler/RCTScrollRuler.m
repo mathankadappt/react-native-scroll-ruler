@@ -594,7 +594,7 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 - (NSString *)accessibilityHint{
-    return @"Use 3 finger swipe gesture to increase or decrease 10 unit";
+    return @"use three finger swipe guesture to increase or decrease by 10 units";
 }
 
 - (void)setAccessibilityHint:(NSString *)accessibilityHint{
