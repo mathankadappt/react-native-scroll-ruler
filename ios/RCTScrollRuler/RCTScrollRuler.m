@@ -348,6 +348,7 @@ static NSNumberFormatter * _objFormatter = nil;
 @property(nonatomic, assign)BOOL           isTime;
 @property(nonatomic, assign)NSString *markerColor;
 @property(nonatomic, assign)NSString *markerTextColor;
+@property(nonatomic, assign)NSString *accessbilityText;
 @property (assign) SystemSoundID pewPewSound;
 @property(nonatomic, assign)int previousRealValue;
 @property (nonatomic, strong)AVAudioPlayer *audioPlayer;
@@ -457,7 +458,10 @@ static NSNumberFormatter * _objFormatter = nil;
         
     });
 }
-
+- (void)setAccessbilityText:(NSString *)accessbilityText
+{
+    _accessbilityText = accessbilityText;
+}
 - (void)setDefaultValue:(int)defaultValue {
     //NSLog(@"setDefaultValue");
      [self reconfigureValues];
@@ -537,8 +541,9 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 
--(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue exponent:(int)exponent defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor {
+-(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue exponent:(int)exponent defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor accessbilityText:(NSString*)accessbilityText {
     
+    //@"use three finger swipe guesture to increase or decrease by 10 units";
     self = [super initWithFrame:frame];
     if (self) {
         _minValue   = minValue;
@@ -550,6 +555,7 @@ static NSNumberFormatter * _objFormatter = nil;
         _betweenNum = betweenNum;
         _isTime = isTime;
         _markerColor = markerColor;
+        _accessbilityText = accessbilityText;
         markerTextColor = markerTextColor;
         
         _bgColor    = [UIColor clearColor];
@@ -594,7 +600,7 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 - (NSString *)accessibilityHint{
-    return @"use three finger swipe guesture to increase or decrease by 10 units";
+    return _accessbilityText;
 }
 
 - (void)setAccessibilityHint:(NSString *)accessibilityHint{

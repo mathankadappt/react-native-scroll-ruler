@@ -45,13 +45,15 @@ RCT_EXPORT_VIEW_PROPERTY(markerTextColor, NSString);
 
 RCT_EXPORT_VIEW_PROPERTY(isTime, BOOL);
 
-RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTBubblingEventBlock);
+
+RCT_EXPORT_VIEW_PROPERTY(accessbilityText, NSString);
 
 - (UIView *)view
 {
     
     CGFloat rullerHeight = [RCTScrollRuler rulerViewHeight];
-    _noneZeroRullerView = [[RCTScrollRuler alloc]initWithFrame:CGRectMake(10, 0, ScreenWidth-20, rullerHeight) theMinValue:0 theMaxValue:0 exponent:0 defaultValue:5 theStep:1.0 theNum:10 theUnit:@"" isTime:false markerColor:@"#ff8d2a" markerTextColor:@"#ffffff"];
+    _noneZeroRullerView = [[RCTScrollRuler alloc]initWithFrame:CGRectMake(10, 0, ScreenWidth-20, rullerHeight) theMinValue:0 theMaxValue:0 exponent:0 defaultValue:5 theStep:1.0 theNum:10 theUnit:@"" isTime:false markerColor:@"#ff8d2a" markerTextColor:@"#ffffff" accessbilityText:@""];
     _noneZeroRullerView.bgColor = [UIColor whiteColor];
     _noneZeroRullerView.delegate        = self;
     _noneZeroRullerView.scrollByHand    = NO;
