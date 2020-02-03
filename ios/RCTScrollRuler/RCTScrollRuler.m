@@ -348,7 +348,7 @@ static NSNumberFormatter * _objFormatter = nil;
 @property(nonatomic, assign)BOOL           isTime;
 @property(nonatomic, assign)NSString *markerColor;
 @property(nonatomic, assign)NSString *markerTextColor;
-@property(nonatomic, assign)NSString *accessbilityText;
+@property(nonatomic, strong)NSString *accessbilityText;
 @property (assign) SystemSoundID pewPewSound;
 @property(nonatomic, assign)int previousRealValue;
 @property (nonatomic, strong)AVAudioPlayer *audioPlayer;
@@ -460,7 +460,8 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 - (void)setAccessbilityText:(NSString *)accessbilityText
 {
-    _accessbilityText = accessbilityText;
+    _accessbilityText = [[NSString alloc] initWithFormat:@"%@",accessbilityText];
+       [self postAccessbilityChanged];
 }
 - (void)setDefaultValue:(int)defaultValue {
     //NSLog(@"setDefaultValue");
