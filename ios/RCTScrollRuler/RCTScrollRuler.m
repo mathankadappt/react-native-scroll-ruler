@@ -339,6 +339,7 @@ static NSNumberFormatter * _objFormatter = nil;
 @property(nonatomic, assign)int           minValue;//游标的最小值
 @property(nonatomic, assign)int           maxValue;//游标的最大值
 @property(nonatomic, assign)int           exponent;
+@property(nonatomic, assign)BOOL          isMinValueChanged;
 @property(nonatomic, assign)float           exponentFloatValue;
 @property(nonatomic, assign)int           step;//间隔值，每两条相隔多少值
 @property(nonatomic, assign)NSInteger     betweenNum;
@@ -392,12 +393,14 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 - (void)setMinValue:(int)minValue {
     
+    _isMinValueChanged = true;
     _minValue = 0;
     _stepNum = 0;
     [self.collectionView reloadData];
     
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hardRefreshView) object:nil];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        _minValue = minValue;
+        self->_minValue = minValue;
         [self reconfigureValues];
         [self.collectionView reloadData];
     });
@@ -406,9 +409,20 @@ static NSNumberFormatter * _objFormatter = nil;
     // [self calculateDefaultValue];
 }
 
+-(void)hardRefreshView{
+    
+    [self.collectionView reloadData];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.4 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [self reconfigureValues];
+        [self.collectionView reloadData];
+    });
+    
+    [self lazyReload];
+}
 - (void)setMaxValue:(int)maxValue {
     //NSLog(@"setMaxValue");
     _maxValue = maxValue;
+    _isMinValueChanged = false;
     [self reconfigureValues];
 }
 
@@ -465,7 +479,14 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 - (void)setDefaultValue:(int)defaultValue {
     //NSLog(@"setDefaultValue");
+    if(_isMinValueChanged){
      [self reconfigureValues];
+    }
+    else{
+        [self hardRefreshView];
+    }
+    
+    
 }
 -(void)calculateDefaultValue{
     
