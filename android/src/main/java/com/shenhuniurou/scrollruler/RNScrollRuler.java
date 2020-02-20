@@ -804,7 +804,7 @@ public class RNScrollRuler extends View {
         if (exponent > 0) {
             exponentFloatValue = this.calculateExponentValue(exponent);
             String formatStr = exponent == 1 ? "%.1f" : (exponent == 2 ? "%.2f" : exponent == 3 ? "%.3f" : exponent == 4 ? "%.4f" : "");
-            delegateValue = String.format(formatStr, (float) currentScale * exponentFloatValue);
+            delegateValue = String.format(Locale.ENGLISH, formatStr, (float) currentScale * exponentFloatValue);
 
         }
         resultText = formatValue(currentScale);
