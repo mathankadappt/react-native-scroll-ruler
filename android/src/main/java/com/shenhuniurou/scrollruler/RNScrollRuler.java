@@ -176,6 +176,7 @@ public class RNScrollRuler extends View {
     private String resultText = String.valueOf(firstScale);
     private String delegateValue = String.valueOf(firstScale);
     private String cacheResultText = String.valueOf(firstScale);
+    private String preVlaue = String.valueOf(firstScale);
     private Paint bgPaint;
     private Paint horzitalLinePaint;
     private Paint smallScalePaint;
@@ -209,6 +210,7 @@ public class RNScrollRuler extends View {
     private static Context sContext;
     private  Context mContext;
     private Paint resultRectPaint;
+    private  boolean isMoveEnd = true;
 
     private String markerTextColor = "#ffffff";
     private String markerColor = "#ff8d2a";
@@ -532,6 +534,7 @@ public class RNScrollRuler extends View {
                 break;
                 case MotionEvent.ACTION_UP:
                 {
+
                     mp.setLooping(false);
                     isUserPressing = false;
                     handler.removeCallbacks(runnable);
@@ -551,16 +554,17 @@ public class RNScrollRuler extends View {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     //playTicks();
-                    //按下时如果属性动画还没执行完,就终止,记录下当前按下点的位置
+                    isMoveEnd = false;
                     if (valueAnimator != null && valueAnimator.isRunning()) {
                         valueAnimator.end();
                         valueAnimator.cancel();
                     }
                     downX = event.getX();
+                    Log.d(TAG, "DOWN: " + moveX + " c: " + currentX + " ,X: " + getWhichScalMovex(maxScale));
                     // doManualMove(event);
                     break;
                 case MotionEvent.ACTION_MOVE:
-
+                    isMoveEnd = false;
                     //滑动时候,通过假设的滑动距离,做超出左边界以及右边界的限制。
                     moveX = currentX - downX + lastMoveX;
                     if (moveX >= width / 2) {
@@ -568,23 +572,27 @@ public class RNScrollRuler extends View {
                     } else if (moveX <= getWhichScalMovex(maxScale)) {
                         moveX = getWhichScalMovex(maxScale);
                     }
-                    Log.d(TAG, "onTouchEvent: " + moveX + " c: " + currentX + " ,X: " + getWhichScalMovex(maxScale));
+                    Log.d(TAG, "MOVE: " + moveX + " c: " + currentX + " ,X: " + getWhichScalMovex(maxScale));
                     break;
                 case MotionEvent.ACTION_UP:
                     // mp.pause();
                     //手指抬起时候制造惯性滑动
+                    isMoveEnd = true;
                     isUserPressing = false;
                     lastMoveX = moveX;
                     xVelocity = (int) velocityTracker.getXVelocity();
                     autoVelocityScroll(xVelocity);
                     velocityTracker.clear();
                     talkBackValue();
+                    if (onChooseResulterListener != null) {
+                        onChooseResulterListener.onEndResult(delegateValue);
+                    }
                 /*Rect rectangle = new Rect(width / 2 + 160, -180, width / 2 - 150, resultNumRect.height()- 100 );
                 if (rectangle.contains((int)event.getX(),(int)event.getY()))
                 {
                     mp.start();
                 }*/
-
+                    Log.d(TAG, "UP: " + moveX + " c: " + currentX + " ,X: " + getWhichScalMovex(maxScale));
                     break;
             }
 
@@ -707,7 +715,7 @@ public class RNScrollRuler extends View {
     }
 
     private void drawScaleAndNum(Canvas canvas) {
-        Log.d(TAG, "drawScaleAndNum: -----------H:  "+resultNumRect.height());
+        //Log.d(TAG, "drawScaleAndNum: -----------H:  "+resultNumRect.height());
         canvas.translate(0, (showScaleResult ? resultNumRect.height() : 0) + rulerToResultgap);//移动画布到结果值的下面
 
         // 先画横线
@@ -814,7 +822,7 @@ public class RNScrollRuler extends View {
         }
         float density = getResources().getDisplayMetrics().density;
         float rulerBaseY = rulerHeight-(16*density);
-        Log.d("RULLER","==========>"+rulerBaseY+", rulerHeight:"+rulerHeight);
+        //Log.d("RULLER","==========>"+rulerBaseY+", rulerHeight:"+rulerHeight);
 
 
         Paint verticalLinePaint = new Paint();
@@ -926,31 +934,11 @@ public class RNScrollRuler extends View {
         }
         prevValue = resultText;
         //Enable for Left and Right button
-        /*if (isAccessabilityEnabled) {
-            canvas.drawRect(leftButton, resultRectPaint);
-            canvas.drawRect(rightButton, resultRectPaint);
-            //float yR = rightButton.top - (rightButton.top - rightButton.bottom)/2;
-
-
-            Rect symbolRect = new Rect();
-            Rect symbolRect2 = new Rect();
-            resultNumPaint2.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 70, getResources().getDisplayMetrics()));
-            resultNumPaint2.getTextBounds("+", 0, 1, symbolRect);
-            resultNumPaint2.getTextBounds("-", 0, 1, symbolRect2);
-            //resultNumPaint.setColor(getResources().getColor(R.color.white));
-            resultNumPaint2.setColor(Color.parseColor(this.markerTextColor));
-
-            float width =  leftButton.width()/2 - symbolRect.width()/2;
-            float xL = leftButton.centerX() - symbolRect.width()/2;
-            float yL = leftButton.centerY() + symbolRect.height()/2;
-
-            float xR = rightButton.left + leftButton.width()/2 - symbolRect2.width()/2;
-
-
-            canvas.drawText("-",xL , yL, resultNumPaint2);
-            canvas.drawText("+", xR, yL, resultNumPaint2);
-        }*/
-
+        if (onChooseResulterListener != null && isMoveEnd && prevValue != delegateValue) {
+            //isMoveEnd = false;
+            onChooseResulterListener.onEndResult(delegateValue);
+        }
+        prevValue = delegateValue;
 
         //drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
 
@@ -975,6 +963,8 @@ public class RNScrollRuler extends View {
             resultNumRight = width / 2 - unitTextSize;
             canvas.drawText(unit, resultNumRight, -Math.round(3.363f * density), kgPaint);            //在当前刻度结果值的又面10px的位置绘制单位
 
+
+
     }
 
     private void talkBackValue()
@@ -991,7 +981,7 @@ public class RNScrollRuler extends View {
         float density = getResources().getDisplayMetrics().density;
         int diff = resultNumRect.height() - Math.round(16*density);
         //diff = diff < 0 ? 0 : diff;
-        Log.d(TAG, "drawBg: <<<<<<<<<<<<<"+diff);
+        //Log.d(TAG, "drawBg: <<<<<<<<<<<<<"+diff);
         bgRect.set(0, diff, width, height+diff);
         if (isBgRoundRect) {
             canvas.drawRoundRect(bgRect, 0, 0, bgPaint); //20->椭圆的用于圆形角x-radius
