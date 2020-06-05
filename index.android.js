@@ -8,6 +8,7 @@ type PropsType = {
   defaultValue?: number,
   step?: number,
   num?: number,
+  accessbilityText?:string,
   unit?: string
 } & typeof View;
 
@@ -19,6 +20,8 @@ export default class ReactScrollRuler extends Component {
     step: PropTypes.number.isRequired,
     num: PropTypes.number.isRequired,
     unit: PropTypes.string,
+    accessbilityText: PropTypes.string,
+    fontFamily: PropTypes.string,
     onSelect: PropTypes.func,
     ...ViewPropTypes
   };
@@ -48,6 +51,8 @@ export default class ReactScrollRuler extends Component {
       isTime,
       markerTextColor,
       markerColor,
+      accessbilityText,
+      fontFamily,
       ...otherProps
     } = this.props;
 
@@ -66,6 +71,8 @@ export default class ReactScrollRuler extends Component {
         isTime={isTime}
         markerTextColor={markerTextColor}
         markerColor={markerColor}
+        accessbilityText={this.accessbilityText}
+        fontFamily ={fontFamily}
         {...otherProps}
       />
     );

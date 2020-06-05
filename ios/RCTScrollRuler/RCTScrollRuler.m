@@ -123,7 +123,7 @@
     int skipValue = (_baseMinValue % (10*stepInt));
     _minValue = _minValue - skipValue;
     _maxValue = _maxValue - skipValue;
-   
+    
     if(isTime == true){
         
         for (int i = 0; i <= _betweenNumber; i ++){
@@ -350,6 +350,7 @@ static NSNumberFormatter * _objFormatter = nil;
 @property(nonatomic, assign)NSString *markerColor;
 @property(nonatomic, assign)NSString *markerTextColor;
 @property(nonatomic, strong)NSString *accessbilityText;
+
 @property (assign) SystemSoundID pewPewSound;
 @property(nonatomic, assign)int previousRealValue;
 @property (nonatomic, strong)AVAudioPlayer *audioPlayer;
@@ -362,6 +363,8 @@ static NSNumberFormatter * _objFormatter = nil;
 //@property RNRullerAccessbilityElement * theRullerAccessbilityElement;
 //@property NSMutableArray *accessbilityElements;
 @property(nonatomic, assign)BOOL           isAccesbilityFocused;
+@property(nonatomic, strong)NSString *fontFamily;
+
 @end
 @implementation RCTScrollRuler
 
@@ -380,10 +383,10 @@ static NSNumberFormatter * _objFormatter = nil;
     
     //NSLog(@"%@",NSStringFromCGRect(self.collectionView.bounds));
     /*if(UIAccessibilityIsVoiceOverRunning() == YES)
-    {
-        [self addSubview:_leftScrollBtn];
-        [self addSubview:_rightScrollBtn];
-    }*/
+     {
+     [self addSubview:_leftScrollBtn];
+     [self addSubview:_rightScrollBtn];
+     }*/
     //[self addSubview:self.grayLine];
     
     [self setExponent:_exponent];
@@ -427,7 +430,7 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 - (void)setIsTime:(BOOL)isTime {
-   
+    
     _isTime = isTime;
     [self reconfigureValues];
     [self calculateDefaultValue];
@@ -436,9 +439,9 @@ static NSNumberFormatter * _objFormatter = nil;
 
 - (void)setMarkerColor:(NSString *)markerColor{
     
-   
+    
     _markerColor = markerColor;
-     [self reconfigureValues];
+    [self reconfigureValues];
     //[self reconfigureValues];
     self.valueLab.backgroundColor = [RCTScrollRuler colorFromHexString:_markerColor];
     _triangle.triangleColor     = [UIColor orangeColor];
@@ -461,9 +464,9 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 - (void)setStep:(float)step {
-   
+    
     _step = step;
-     [self reconfigureValues];
+    [self reconfigureValues];
     [self lazyReload];
 }
 -(void)lazyReload{
@@ -472,15 +475,28 @@ static NSNumberFormatter * _objFormatter = nil;
         
     });
 }
+
+-(void)setFontFamily:(NSString *)fontFamily
+{
+    _fontFamily = fontFamily;
+    UIFont *font = [UIFont fontWithName:fontFamily size:20];
+    if (_valueLab != NULL) {
+        [_valueLab setFont:[UIFont fontWithName:fontFamily size:20]];
+    }
+    if (_unitLab != nil) {
+        [_unitLab setFont:[UIFont fontWithName:fontFamily size:13]];
+    }
+    
+}
 - (void)setAccessbilityText:(NSString *)accessbilityText
 {
     _accessbilityText = [[NSString alloc] initWithFormat:@"%@",accessbilityText];
-       [self postAccessbilityChanged];
+    [self postAccessbilityChanged];
 }
 - (void)setDefaultValue:(int)defaultValue {
     //NSLog(@"setDefaultValue");
     if(_isMinValueChanged){
-     [self reconfigureValues];
+        [self reconfigureValues];
     }
     else{
         [self hardRefreshView];
@@ -521,7 +537,7 @@ static NSNumberFormatter * _objFormatter = nil;
     
     
     
-   // [self accessibilityElementDidBecomeFocused];
+    // [self accessibilityElementDidBecomeFocused];
     
 }
 
@@ -563,7 +579,7 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 
--(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue exponent:(int)exponent defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor accessbilityText:(NSString*)accessbilityText {
+-(instancetype)initWithFrame:(CGRect)frame theMinValue:(float)minValue theMaxValue:(float)maxValue exponent:(int)exponent defaultValue:(float)defaultValue theStep:(float)step theNum:(NSInteger)betweenNum theUnit:unit isTime:(BOOL)isTime markerColor:(NSString*)markerColor markerTextColor:(NSString*)markerTextColor accessbilityText:(NSString*)accessbilityText fontFamily:(NSString*)fontFamily{
     
     //@"use three finger swipe guesture to increase or decrease by 10 units";
     self = [super initWithFrame:frame];
@@ -578,8 +594,8 @@ static NSNumberFormatter * _objFormatter = nil;
         _isTime = isTime;
         _markerColor = markerColor;
         _accessbilityText = accessbilityText;
-        markerTextColor = markerTextColor;
-        
+        _markerTextColor = markerTextColor;
+        _fontFamily = fontFamily != nil ? fontFamily : @"Helvetica-Bold";
         _bgColor    = [UIColor clearColor];
         _triangleColor          = [UIColor greenColor];//[RCTScrollRuler colorFromHexString:_markerColor];
         self.backgroundColor    = [UIColor clearColor];
@@ -762,31 +778,31 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 -(void)setupAccessabilityButton {
-   /* if(UIAccessibilityIsVoiceOverRunning() == YES)
-    {
-        _leftScrollBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 30, 50, _collectionView.frame.size.height + 0)];
-        _rightScrollBtn = [[UIButton alloc]initWithFrame:CGRectMake((self.bounds.size.width+20) - 50, 30, 50, _collectionView.frame.size.height)];
-        [_rightScrollBtn setBackgroundColor:[UIColor orangeColor]];
-        [_leftScrollBtn setBackgroundColor:[UIColor orangeColor]];
-        UIImage *leftBtnImage = [UIImage imageNamed:@"minus.png"];
-        [_leftScrollBtn setImage:leftBtnImage forState:UIControlStateNormal];
-        UIImage *rightBtnImage = [UIImage imageNamed:@"plus.png"];
-        [_rightScrollBtn setImage:rightBtnImage forState:UIControlStateNormal];
-        _leftScrollBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
-        _rightScrollBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(voiceOverStatusChanged)
-                                                     name:UIAccessibilityVoiceOverStatusChanged
-                                                   object:nil];
-        //stopTimer
-        //_timer = [NSTimer timerWithTimeInterval:(x) target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
-        
-        [_rightScrollBtn addTarget:self action:@selector(repeatLeft:) forControlEvents:UIControlEventTouchDown];
-        [_leftScrollBtn addTarget:self action:@selector(repeatRight:) forControlEvents:UIControlEventTouchDown];
-        
-        [_rightScrollBtn addTarget:self action:@selector(stopTimer:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
-        [_leftScrollBtn addTarget:self action:@selector(stopTimer:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
-    }*/
+    /* if(UIAccessibilityIsVoiceOverRunning() == YES)
+     {
+     _leftScrollBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 30, 50, _collectionView.frame.size.height + 0)];
+     _rightScrollBtn = [[UIButton alloc]initWithFrame:CGRectMake((self.bounds.size.width+20) - 50, 30, 50, _collectionView.frame.size.height)];
+     [_rightScrollBtn setBackgroundColor:[UIColor orangeColor]];
+     [_leftScrollBtn setBackgroundColor:[UIColor orangeColor]];
+     UIImage *leftBtnImage = [UIImage imageNamed:@"minus.png"];
+     [_leftScrollBtn setImage:leftBtnImage forState:UIControlStateNormal];
+     UIImage *rightBtnImage = [UIImage imageNamed:@"plus.png"];
+     [_rightScrollBtn setImage:rightBtnImage forState:UIControlStateNormal];
+     _leftScrollBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
+     _rightScrollBtn.imageView.contentMode = UIViewContentModeScaleAspectFit;
+     [[NSNotificationCenter defaultCenter] addObserver:self
+     selector:@selector(voiceOverStatusChanged)
+     name:UIAccessibilityVoiceOverStatusChanged
+     object:nil];
+     //stopTimer
+     //_timer = [NSTimer timerWithTimeInterval:(x) target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
+     
+     [_rightScrollBtn addTarget:self action:@selector(repeatLeft:) forControlEvents:UIControlEventTouchDown];
+     [_leftScrollBtn addTarget:self action:@selector(repeatRight:) forControlEvents:UIControlEventTouchDown];
+     
+     [_rightScrollBtn addTarget:self action:@selector(stopTimer:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+     [_leftScrollBtn addTarget:self action:@selector(stopTimer:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+     }*/
 }
 
 -(void)invalidateTimer{
@@ -796,8 +812,8 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 -(void)scheduleTimer{
     /*[self invalidateTimer];
-    _timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(scrollCollectionView) userInfo:nil repeats:YES];
-    [_timer fire];*/
+     _timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(scrollCollectionView) userInfo:nil repeats:YES];
+     [_timer fire];*/
 }
 -(void)repeatRight:(int)time{
     _direction = DIRECTION_RIGHT;
@@ -822,6 +838,9 @@ static NSNumberFormatter * _objFormatter = nil;
     
 }
 
+-(NSString*)fontname {
+    return _fontFamily == nil ? @"": _fontFamily;
+}
 
 -(UILabel *)valueLab{
     if (!_valueLab) {
@@ -835,7 +854,7 @@ static NSNumberFormatter * _objFormatter = nil;
             _triangle.triangleColor     = [UIColor orangeColor];
         }
         [self addTriangleTipToLayer:_valueLab.layer];
-        [_valueLab setFont:[UIFont fontWithName:@"Helvetica-Bold" size:20]];
+        [_valueLab setFont:[UIFont fontWithName:[self fontname] size:20]];
         _valueLab.textAlignment = NSTextAlignmentCenter;
     }
     return _valueLab;
@@ -846,7 +865,7 @@ static NSNumberFormatter * _objFormatter = nil;
         _unitLab = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width/2+10, 4, 40, 30)];
         //_unitLab.textColor = [UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1.0];
         _unitLab.textColor = [UIColor greenColor];
-        [_unitLab setFont:[UIFont fontWithName:@"Helvetica-Bold" size:13]];
+        [_unitLab setFont:[UIFont fontWithName:[self fontname] size:13]];
         _unitLab.textAlignment = NSTextAlignmentLeft;
     }
     return _unitLab;
@@ -1119,8 +1138,8 @@ static NSNumberFormatter * _objFormatter = nil;
         }
     }
     if(self.isAccesbilityFocused){
-    UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, // announce
-                                    _valueLab.text);
+        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, // announce
+                                        _valueLab.text);
     }
 }
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
@@ -1164,8 +1183,8 @@ static NSNumberFormatter * _objFormatter = nil;
     }else{
         // _valueLab.text = [NSString stringWithFormat:@"%d",_defaultValue];
     }
-   // _rightScrollBtn.accessibilityLabel = _valueLab.text;
-   // _leftScrollBtn.accessibilityLabel = _valueLab.text;
+    // _rightScrollBtn.accessibilityLabel = _valueLab.text;
+    // _leftScrollBtn.accessibilityLabel = _valueLab.text;
 }
 
 -(int)skippingValue{

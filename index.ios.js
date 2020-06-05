@@ -8,6 +8,7 @@ type PropsType = {
   step?: number,
   defaultValue?: number,
   num?: number,
+  accessbilityText?:string,
   unit?: string
 } & typeof View;
 
@@ -19,6 +20,8 @@ export default class RNScrollRuler extends Component {
     defaultValue: PropTypes.number.isRequired,
     num: PropTypes.number.isRequired,
     unit: PropTypes.string,
+    accessbilityText: PropTypes.string,
+    fontFamily: PropTypes.string,
     onSelect: PropTypes.func,
     ...ViewPropTypes
   };
@@ -46,9 +49,12 @@ export default class RNScrollRuler extends Component {
       unit,
       onSelect,
       isTime,
+      accessbilityText,
+      fontFamily,
       ...otherProps
     } = this.props;
 
+    
     return (
       <RCTScrollRuler
         ref={component => {
@@ -61,7 +67,9 @@ export default class RNScrollRuler extends Component {
         num={num}
         unit={unit}
         isTime={isTime}
+        fontFamily={fontFamily}
         onSelect={this._onSelect}
+        accessbilityText={accessbilityText}
         {...otherProps}
       />
     );
