@@ -70,6 +70,7 @@
 @property (nonatomic,assign)int baseMinValue;
 @property (nonatomic,assign)int defaultValue;
 @property (nonatomic,assign)BOOL isTime;
+@property (nonatomic,assign)NSString *fontName;
 @property (nonatomic,assign)NSString *markerColor;
 @property (nonatomic,assign)NSString *markerTextColor;
 @property (nonatomic,assign)float step;
@@ -124,57 +125,65 @@
     _minValue = _minValue - skipValue;
     _maxValue = _maxValue - skipValue;
     
+    UIFont *normalFont = [UIFont fontWithName:self.fontName size:11];
+    if (normalFont == nil) {
+        normalFont = [UIFont systemFontOfSize:11];
+    }
+     NSDictionary *attribute = @{NSFontAttributeName:normalFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
+    
     if(isTime == true){
         
         for (int i = 0; i <= _betweenNumber; i ++){
             
-            CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
-            int tempInt = (int)(i * _step) + _minValue;
-            if(tempInt > _totalMaxValue){
-                return;
-            }
-            if(tempInt < _baseMinValue){
-                continue;
-            }
-            if (tempInt%10 == 0){
-                
-                int numeric = (int)(i * _step) + _minValue;
-                int minutes =  floor(numeric / 60);
-                int seconds = numeric - minutes * 60;
-                NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
-                NSString *num = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
-                //NSString *num = [NSString stringWithFormat:@"%d:%d", minutes, seconds];
-                // NSLog(@"Num: %@, Step : %f, Min : %d, i: %d ",num, _step, _minValue, i );
-                if ([num isEqualToString:@"0"]||[num isEqualToString:@"0:00"]) {
-                    num = @"0:00";
-                }
-                
-                
-                //NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
-                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
-                
-                
-                CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
-                
-                CGFloat predictedX = startX+lineCenterX*i-width/2;
-                if(self.row == 0 && i == 0){
-                    predictedX = (startX+lineCenterX*i-width/2)+width/2;
-                }
-                else if(self.row == self.totalRows-1 && i > 0 ){
-                    predictedX = (startX+lineCenterX*i-width/2)-width/2;
-                }
-                [num drawInRect:CGRectMake(predictedX, longLineY-14, width+2, 16) withAttributes:attribute];
+            @autoreleasepool {
                 CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
-                CGContextSetStrokeColorWithColor(context, [UIColor lightGrayColor].CGColor);
-                CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
-            }else if(tempInt%(5) == 0){
-                CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
-                CGContextAddLineToPoint(context, startX+lineCenterX*i, mediumLineY);
-                
-            }else{
-                CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
+                int tempInt = (int)(i * _step) + _minValue;
+                if(tempInt > _totalMaxValue){
+                    return;
+                }
+                if(tempInt < _baseMinValue){
+                    continue;
+                }
+                if (tempInt%10 == 0){
+                    
+                    int numeric = (int)(i * _step) + _minValue;
+                    int minutes =  floor(numeric / 60);
+                    int seconds = numeric - minutes * 60;
+                    NSString * secStr = (seconds < 10) ? [NSString stringWithFormat:@"0%d",seconds] :  [NSString stringWithFormat:@"%d",seconds];
+                    NSString *num = [NSString stringWithFormat:@"%d:%@", minutes, secStr];
+                    //NSString *num = [NSString stringWithFormat:@"%d:%d", minutes, seconds];
+                    // NSLog(@"Num: %@, Step : %f, Min : %d, i: %d ",num, _step, _minValue, i );
+                    if ([num isEqualToString:@"0"]||[num isEqualToString:@"0:00"]) {
+                        num = @"0:00";
+                    }
+                    
+                    
+                    //NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[UIColor blackColor]};
+                    
+                    
+                    
+                    CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
+                    
+                    CGFloat predictedX = startX+lineCenterX*i-width/2;
+                    if(self.row == 0 && i == 0){
+                        predictedX = (startX+lineCenterX*i-width/2)+width/2;
+                    }
+                    else if(self.row == self.totalRows-1 && i > 0 ){
+                        predictedX = (startX+lineCenterX*i-width/2)-width/2;
+                    }
+                    [num drawInRect:CGRectMake(predictedX, longLineY-14, width+2, 16) withAttributes:attribute];
+                    CGContextMoveToPoint(context, startX+lineCenterX*i, topY);
+                    CGContextSetStrokeColorWithColor(context, [UIColor lightGrayColor].CGColor);
+                    CGContextAddLineToPoint(context, startX+lineCenterX*i, longLineY);
+                }else if(tempInt%(5) == 0){
+                    CGContextSetStrokeColorWithColor(context, [RCTScrollRuler colorFromHexString:@"#999999"].CGColor);
+                    CGContextAddLineToPoint(context, startX+lineCenterX*i, mediumLineY);
+                    
+                }else{
+                    CGContextAddLineToPoint(context, startX+lineCenterX*i, shortLineY);
+                }
+                CGContextStrokePath(context);//开始绘制
             }
-            CGContextStrokePath(context);//开始绘制
         }
     }else{
         
@@ -209,7 +218,8 @@
                     }
                 }
                 //NSLog(@"%f",1/pow(10, tempInt));
-                NSDictionary *attribute = @{NSFontAttributeName:TextRulerFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
+                
+                NSDictionary *attribute = @{NSFontAttributeName:normalFont, NSForegroundColorAttributeName:[RCTScrollRuler colorFromHexString:@"#434343"]};
                 
                 CGFloat width = [num boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX) options:0 attributes:attribute context:nil].size.width;
                 
@@ -328,6 +338,7 @@ static NSNumberFormatter * _objFormatter = nil;
 @interface RCTScrollRuler()<UIScrollViewDelegate,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout>
 {
     NSURL *soundFileURL;
+    dispatch_group_t serviceGroup ;
 }
 @property(nonatomic, strong)UILabel         *valueLab;
 @property(nonatomic, strong)UILabel         *unitLab;
@@ -369,29 +380,21 @@ static NSNumberFormatter * _objFormatter = nil;
 @implementation RCTScrollRuler
 
 -(void)reconfigureValues{
-    [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
-    _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
-    _bgColor    = [UIColor greenColor];
-    _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
-    self.backgroundColor    = [UIColor clearColor];
-    
-    //[self addSubview:self.unitLab];
-    
-    
-    [self addSubview:self.collectionView];
-    [self addSubview:self.triangle];
-    
-    //NSLog(@"%@",NSStringFromCGRect(self.collectionView.bounds));
-    /*if(UIAccessibilityIsVoiceOverRunning() == YES)
-     {
-     [self addSubview:_leftScrollBtn];
-     [self addSubview:_rightScrollBtn];
-     }*/
-    //[self addSubview:self.grayLine];
-    
-    [self setExponent:_exponent];
-    self.unitLab.text = _unit;
-    [self addSubview:self.valueLab];
+    @autoreleasepool {
+        
+        
+        [[self subviews]makeObjectsPerformSelector:@selector(removeFromSuperview)];
+        _stepNum    = (_maxValue-_minValue)/_step/_betweenNum + 1;
+        _bgColor    = [UIColor greenColor];
+        _triangleColor          = [RCTScrollRuler colorFromHexString:_markerColor];
+        self.backgroundColor    = [UIColor clearColor];
+        
+        [self addSubview:self.collectionView];
+        [self addSubview:self.triangle];
+        [self setExponent:_exponent];
+        self.unitLab.text = _unit;
+        [self addSubview:self.valueLab];
+    }
     
 }
 - (void)setMinValue:(int)minValue {
@@ -584,6 +587,8 @@ static NSNumberFormatter * _objFormatter = nil;
     //@"use three finger swipe guesture to increase or decrease by 10 units";
     self = [super initWithFrame:frame];
     if (self) {
+         serviceGroup = dispatch_group_create();
+
         _minValue   = minValue;
         _maxValue   = maxValue;
         _exponent   = exponent;
@@ -839,7 +844,7 @@ static NSNumberFormatter * _objFormatter = nil;
 }
 
 -(NSString*)fontname {
-    return _fontFamily == nil ? @"": _fontFamily;
+    return _fontFamily == nil ? @"Helvetica-Bold": _fontFamily;
 }
 
 -(UILabel *)valueLab{
@@ -982,6 +987,7 @@ static NSNumberFormatter * _objFormatter = nil;
         rulerView.defaultValue = (int)(_defaultValue);
         rulerView.exponent = _exponent;
         rulerView.step              = _step;
+        rulerView.fontName = [self fontname];
         rulerView.markerColor = _markerColor;
         rulerView.isTime = _isTime;
         rulerView.row               = indexPath.item-1;
