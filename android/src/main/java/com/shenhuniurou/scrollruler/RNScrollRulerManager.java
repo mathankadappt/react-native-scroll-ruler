@@ -95,4 +95,10 @@ public class RNScrollRulerManager extends SimpleViewManager {
         ruler.setExponent(exponent);
     }
 
+    @ReactProp(name = "fontFamily")
+    public void setFontName(RNScrollRuler ruler, @Nullable String fontFamily) {
+        ruler.setFontName(fontFamily);
+    }
+
+
 }

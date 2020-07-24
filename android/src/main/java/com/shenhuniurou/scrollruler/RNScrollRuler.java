@@ -171,6 +171,8 @@ public class RNScrollRuler extends View {
 
     private boolean isTime = false;
 
+    private String fontFamilyName = "";
+
     private ValueAnimator valueAnimator;
     private VelocityTracker velocityTracker = VelocityTracker.obtain();
     private String resultText = String.valueOf(firstScale);
@@ -184,7 +186,7 @@ public class RNScrollRuler extends View {
     private Paint lagScalePaint;
     private Paint scaleNumPaint;
     private Paint resultNumPaint;
-    private Paint resultNumPaint2;
+    //private Paint resultNumPaint2;
     private Paint kgPaint;
     private Rect scaleNumRect;
     private Rect resultNumRect;
@@ -328,7 +330,7 @@ public class RNScrollRuler extends View {
         scaleNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         resultNumPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         kgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        resultNumPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        //resultNumPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 
         bgPaint.setColor(bgColor);
         horzitalLinePaint.setColor(smallScaleColor);
@@ -351,8 +353,8 @@ public class RNScrollRuler extends View {
         midScalePaint.setStyle(Paint.Style.FILL);
         lagScalePaint.setStyle(Paint.Style.FILL);
 
-        resultNumPaint2.setColor(resultNumColor);
-        resultNumPaint2.setFakeBoldText(true);
+       // resultNumPaint2.setColor(resultNumColor);
+       // resultNumPaint2.setFakeBoldText(true);
 
 //        lagScalePaint.setStrokeCap(Paint.Cap.ROUND);
 //        midScalePaint.setStrokeCap(Paint.Cap.ROUND);
@@ -364,7 +366,7 @@ public class RNScrollRuler extends View {
         lagScalePaint.setStrokeWidth(largeScaleStroke);
         horzitalLinePaint.setStrokeWidth(largeScaleStroke);
 
-        resultNumPaint2.setTextSize(70);
+        //resultNumPaint2.setTextSize(70);
         resultNumPaint.setTextSize(resultNumTextSize);
         kgPaint.setTextSize(unitTextSize);
         scaleNumPaint.setTextSize(scaleNumTextSize);
@@ -925,40 +927,16 @@ public class RNScrollRuler extends View {
             playTicks();
         }
         prevValue = resultText;
-        //Enable for Left and Right button
-        /*if (isAccessabilityEnabled) {
-            canvas.drawRect(leftButton, resultRectPaint);
-            canvas.drawRect(rightButton, resultRectPaint);
-            //float yR = rightButton.top - (rightButton.top - rightButton.bottom)/2;
-
-
-            Rect symbolRect = new Rect();
-            Rect symbolRect2 = new Rect();
-            resultNumPaint2.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 70, getResources().getDisplayMetrics()));
-            resultNumPaint2.getTextBounds("+", 0, 1, symbolRect);
-            resultNumPaint2.getTextBounds("-", 0, 1, symbolRect2);
-            //resultNumPaint.setColor(getResources().getColor(R.color.white));
-            resultNumPaint2.setColor(Color.parseColor(this.markerTextColor));
-
-            float width =  leftButton.width()/2 - symbolRect.width()/2;
-            float xL = leftButton.centerX() - symbolRect.width()/2;
-            float yL = leftButton.centerY() + symbolRect.height()/2;
-
-            float xR = rightButton.left + leftButton.width()/2 - symbolRect2.width()/2;
-
-
-            canvas.drawText("-",xL , yL, resultNumPaint2);
-            canvas.drawText("+", xR, yL, resultNumPaint2);
-        }*/
-
 
         //drawTriangle(canvas, paint, width / 2 - 10,  resultNumRect.height()- 100, 150);
 
             resultNumPaint.setTextSize((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, getResources().getDisplayMetrics()));
-            resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
+
             // resultNumPaint.setColor(getResources().getColor(R.color.white));
             resultNumPaint.setColor(Color.parseColor(this.markerTextColor));
-            resultNumPaint.setTypeface(Typeface.DEFAULT_BOLD);
+            resultNumPaint.setTypeface(Typeface.create(fontFamilyName,Typeface.BOLD));
+            resultNumPaint.getTextBounds(resultText, 0, resultText.length(), resultNumRect);
+
 
             // canvas.drawText(resultText, width / 2  - resultNumRect.width() / 2 - 2, resultNumRect.height() - 120, resultNumPaint);
             if (this.isTime) {
@@ -1164,6 +1142,12 @@ public class RNScrollRuler extends View {
 
     public void setExponent(int exponent) {
         this.exponent = exponent;
+        invalidate();
+    }
+    public void setFontName(String fontfamily) {
+        this.fontFamilyName = fontFamilyName;
+        scaleNumPaint.setTypeface(Typeface.create(fontfamily,Typeface.NORMAL));
+        resultNumPaint.setTypeface(Typeface.create(fontfamily,Typeface.BOLD));
         invalidate();
     }
 
